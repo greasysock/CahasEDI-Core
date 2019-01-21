@@ -16,6 +16,7 @@ class Template:
         self._to_bytes_array()
 
     def _to_bytes_array(self):
+        self._edi_file.seek(0)
         lines = self._edi_file.readlines()
 
         out_bytes = b''
@@ -23,11 +24,13 @@ class Template:
             line = line.rstrip(b'\n')
             out_bytes += line
 
-        edi_dict = dict()
+        edi_list = list()
         out_bytes_sections = out_bytes.split(self._terminator)
-
         for section in out_bytes_sections:
-            print(section.split(self._separator))
+            section = section.split(self._separator)
+            edi_list.append(section)
+
+        return edi_list
 
     def __str__(self):
         return "| {} Template - \"{}\" |".format(self._template_id, self._template_description)

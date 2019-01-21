@@ -1,8 +1,42 @@
+from enum import Enum
+
 # Classes and methods that control, verify, and read incoming and outgoing edi files.
+
 
 def get_tags():
     t = ISA.get_tags()
     return t
+
+
+class StatusValues(Enum):
+    Mandatory = b'M'
+    Required = b'R'
+    Conditional = b'C'
+    Optional = b'O'
+    Floating = b'F'
+    Dependent = b'D'
+    Advised = b'A'
+    Situational = b'S'
+    NotUsed = b'X'
+    NotRecommended = b'N'
+
+
+class GenericProperty:
+    def __init__(self, min_length : int, max_length : int, name, status : StatusValues, tag : int):
+        self._min_length = min_length
+        self._max_length = max_length
+        self._name = name
+        self._status = status
+        self._tag = tag
+
+        self._content = None
+
+    def set_content(self, content):
+        self._content = content
+
+    def __str__(self):
+        return " [ {}: \"{}\" ] ".format(self._name, self._content.decode("utf-8"))
+
 
 class GENERIC_TAG:
     _tags = list()
@@ -14,6 +48,7 @@ class GENERIC_TAG:
         self._max_occ = None
         self._level = None
         self._content = content
+        self._property_array = list()
 
     def _append_tag(self, tag_obj):
         self._tags.append(tag_obj)
@@ -29,10 +64,35 @@ class GENERIC_TAG:
     def get_tags(self):
         return self._tags
 
+    def put_bytes_list(self, bytes_list : list):
+        print(self._tag)
+        for i,value in enumerate(bytes_list):
+            self._property_array[i].set_content(value)
+            print(self._property_array[i])
 
 class _ISA(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "ISA", "Interchange Control Header")
+        GENERIC_TAG.__init__(self, b'ISA', "Interchange Control Header")
+
+        self._property_array = [
+            GenericProperty(2, 2, "Authorization Information Qualifier", StatusValues.Mandatory, 1),
+            GenericProperty(10,10, "Authorization Information", StatusValues.Mandatory, 2),
+            GenericProperty(2, 2, "Security Information Qualifier", StatusValues.Mandatory, 3),
+            GenericProperty(10, 10, "Security Information", StatusValues.Mandatory, 4),
+            GenericProperty(2, 2, "Interchange ID Qualifier", StatusValues.Mandatory, 5),
+            GenericProperty(15, 15, "Interchange Sender ID", StatusValues.Mandatory, 6),
+            GenericProperty(2, 2, "Interchange ID Qualifier", StatusValues.Mandatory, 5),
+            GenericProperty(15, 15, "Interchange Receiver ID", StatusValues.Mandatory, 7),
+            GenericProperty(6, 6, "Interchange Date", StatusValues.Mandatory, 8),
+            GenericProperty(4, 4, "Interchange Time", StatusValues.Mandatory, 9),
+            GenericProperty(1, 1, "Interchange Control Standards Identifier", StatusValues.Mandatory, 10),
+            GenericProperty(5, 5, "Interchange Control Version Number", StatusValues.Mandatory, 11),
+            GenericProperty(9, 9, "Interchange Control Number", StatusValues.Mandatory, 12),
+            GenericProperty(1, 1, "Acknowledgment Requested", StatusValues.Mandatory, 13),
+            GenericProperty(1, 1, "Usage Indicator", StatusValues.Mandatory, 14),
+            GenericProperty(1, 1, "Component Element Separator", StatusValues.Mandatory, 15),
+        ]
+
         self._append_tag(self)
 
 
@@ -41,8 +101,19 @@ ISA = _ISA()
 
 class _GS(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "GS", "Functional Group Header")
+        GENERIC_TAG.__init__(self, b'GS', "Functional Group Header")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(2, 2, "Functional Identifier Code", StatusValues.Mandatory, 479),
+            GenericProperty(2, 15, "Application Sender's Code", StatusValues.Mandatory, 142),
+            GenericProperty(2, 15, "Application Receiver's Code", StatusValues.Mandatory, 124),
+            GenericProperty(8, 8, "Date", StatusValues.Mandatory, 373),
+            GenericProperty(4, 8, "Time", StatusValues.Mandatory, 337),
+            GenericProperty(1, 9, "Group Control Number", StatusValues.Mandatory, 28),
+            GenericProperty(1, 2, "Responsible Agency Code", StatusValues.Mandatory, 455),
+            GenericProperty(1, 12, "Version / Release/ Industry / Identifier Code", StatusValues.Mandatory, 480)
+        ]
 
 
 GS = _GS()
@@ -52,6 +123,11 @@ class _ST(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, "ST", "Transaction Set Header")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(3, 3, "Transaction Set Identifier COde", StatusValues.Mandatory, 143),
+            GenericProperty(2, 15, "Transaction Set Control Number", StatusValues.Mandatory, 329)
+        ]
 
 
 ST = _ST()
@@ -205,6 +281,10 @@ class _SE(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, "SE", "Transaction Set Trailer")
         self._append_tag(self)
+        self._property_array = [
+            GenericProperty(1, 10, "Number of Included Segments", StatusValues.Mandatory, 96),
+            GenericProperty(4, 9, "Transaction Set Control Number", StatusValues.Mandatory, 329),
+        ]
 
 
 SE = _SE()
@@ -214,6 +294,10 @@ class _GE(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, "GE", "Transaction Group Trailer")
         self._append_tag(self)
+        self._property_array = [
+            GenericProperty(1, 6, "Number of Transaction Sets Included", StatusValues.Mandatory, 97),
+            GenericProperty(1, 9, "Group Control Number", StatusValues.Mandatory, 28),
+        ]
 
 
 GE = _GE()
@@ -221,8 +305,12 @@ GE = _GE()
 
 class _IEA(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "IEA", "Interchange Control Trailer")
+        GENERIC_TAG.__init__(self, b'IEA', "Interchange Control Trailer")
         self._append_tag(self)
+        self._property_array = [
+            GenericProperty(1, 5, "Number of Included Functional Groups", StatusValues.Mandatory, 16),
+            GenericProperty(9, 9, "Interchange Control Number", StatusValues.Mandatory, 12)
+        ]
 
 
 IEA = _IEA()

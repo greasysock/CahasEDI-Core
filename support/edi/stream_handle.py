@@ -45,4 +45,3 @@ class EdiFile:
                 self._template = template.get_template()
         self._edi_file.seek(0)
         self._template = self._template(self._edi_file)
-        print(self._template)
