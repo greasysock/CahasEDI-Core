@@ -40,18 +40,30 @@ class GenericProperty:
 
 class GENERIC_TAG:
     _tags = list()
-    def __init__(self, tag, content):
+    def __init__(self, tag, content, status = StatusValues.Mandatory , max_occ = 1, level = 0):
         self._counter = None
         self._no = None
         self._tag = tag
-        self._st = None
-        self._max_occ = None
-        self._level = None
+        self._status = status
+        self._max_occ = max_occ
+        self._level = level
         self._content = content
         self._property_array = list()
 
     def _append_tag(self, tag_obj):
         self._tags.append(tag_obj)
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def max_occ(self):
+        return self._max_occ
+
+    @property
+    def level(self):
+        return self._level
 
     @property
     def tag(self):
@@ -69,6 +81,21 @@ class GENERIC_TAG:
         for i,value in enumerate(bytes_list):
             self._property_array[i].set_content(value)
             print(self._property_array[i])
+
+
+# Tag list for layered tags
+
+class TagArray:
+    def __init__(self, max_occ : int, level : int, status : StatusValues, *argv : GENERIC_TAG or object):
+        self._array = list()
+        self._max_occ = max_occ
+        self._level = level
+        self._status = status
+
+        for arg in argv:
+            self._array.append(arg)
+        pass
+
 
 class _ISA(GENERIC_TAG):
     def __init__(self):
