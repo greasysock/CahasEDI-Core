@@ -1,36 +1,35 @@
 import io
-from .template_operators import template_list
+from .tags import _ISA, _IEA, _GS, _GE, _ST, _SE
+from .template_operators import template_list, discover_all_sections, clean_head
 
 # Generic template class operates as reader, writer, and validating class for all incoming and outdoing edi files.
 
-class Template:
-    def __init__(self, edi_file : io.BytesIO, template_id : int, template_description : str, separator = b'*', terminator = b'~', sub_separator = b'>', repeating = b'^'):
-        self._separator = separator
-        self._terminator = terminator
-        self._sub_separator = sub_separator
-        self._repeating = repeating
 
+class Template:
+    def __init__(self, template_id : int, template_description : str, start_data = None):
         self._template_id = template_id
         self._template_description = template_description
-        self._edi_file = edi_file
-        self._to_bytes_array()
+        self._ST = _ST()
+        self._SE = _SE()
 
-    def _to_bytes_array(self):
-        self._edi_file.seek(0)
-        lines = self._edi_file.readlines()
+        if start_data is not None:
+            self._init_template_data = start_data
+            self._init_process()
 
-        out_bytes = b''
-        for line in lines:
-            line = line.rstrip(b'\n')
-            out_bytes += line
+    def _init_process(self):
+        st = None
+        se = None
 
-        edi_list = list()
-        out_bytes_sections = out_bytes.split(self._terminator)
-        for section in out_bytes_sections:
-            section = section.split(self._separator)
-            edi_list.append(section)
+        for section in self._init_template_data:
+            if clean_head(section[0]) == self._ST.tag:
+                st = section
+            elif clean_head(section[0]) == self._SE.tag:
+                se = section
 
-        return edi_list
+        if st is not None:
+            self._ST.put_bytes_list(st[1:])
+        if se is not None:
+            self._SE.put_bytes_list(se[1:])
 
     def __str__(self):
         return "| {} Template - \"{}\" |".format(self._template_id, self._template_description)

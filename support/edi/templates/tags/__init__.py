@@ -148,7 +148,7 @@ GS = _GS()
 
 class _ST(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "ST", "Transaction Set Header")
+        GENERIC_TAG.__init__(self, b'ST', "Transaction Set Header")
         self._append_tag(self)
 
         self._property_array = [
@@ -306,7 +306,7 @@ CTT = _CTT()
 
 class _SE(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "SE", "Transaction Set Trailer")
+        GENERIC_TAG.__init__(self, b'SE', "Transaction Set Trailer")
         self._append_tag(self)
         self._property_array = [
             GenericProperty(1, 10, "Number of Included Segments", StatusValues.Mandatory, 96),
@@ -319,7 +319,7 @@ SE = _SE()
 
 class _GE(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "GE", "Transaction Group Trailer")
+        GENERIC_TAG.__init__(self, b'GE', "Transaction Group Trailer")
         self._append_tag(self)
         self._property_array = [
             GenericProperty(1, 6, "Number of Transaction Sets Included", StatusValues.Mandatory, 97),

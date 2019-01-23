@@ -6,9 +6,8 @@ desc = "Purchase Order"
 i = 850
 
 class Template(generic.Template):
-    def __init__(self, edi_file: io.BytesIO):
-        self._edi_file = edi_file
-        generic.Template.__init__(self, self._edi_file, i, desc)
+    def __init__(self, start_data = None):
+        generic.Template.__init__(self, i, desc, start_data=start_data)
 
 
 class TemplateDescription(generic.TemplateDescription):
