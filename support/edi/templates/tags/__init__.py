@@ -22,7 +22,7 @@ class StatusValues(Enum):
 
 
 class GenericProperty:
-    def __init__(self, min_length : int, max_length : int, name, status : StatusValues, tag : int):
+    def __init__(self, min_length : int, max_length : int, name, status : StatusValues, tag : int, value_type = None):
         self._min_length = min_length
         self._max_length = max_length
         self._name = name
@@ -36,6 +36,10 @@ class GenericProperty:
 
     def __str__(self):
         return " [ {}: \"{}\" ] ".format(self._name, self._content.decode("utf-8"))
+
+
+class EmptyProperty:
+    pass
 
 
 class GENERIC_TAG:
@@ -77,10 +81,11 @@ class GENERIC_TAG:
         return self._tags
 
     def put_bytes_list(self, bytes_list : list):
-        print(self._tag)
+#        print(self.tag)
         for i,value in enumerate(bytes_list):
-            self._property_array[i].set_content(value)
-            print(self._property_array[i])
+            if type(self._property_array[i]) == GenericProperty:
+                self._property_array[i].set_content(value)
+#                print(self._property_array[i])
 
 
 # Tag list for layered tags
@@ -162,8 +167,15 @@ ST = _ST()
 
 class _BIG(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "BIG", "Beginning Segment for Invoice")
+        GENERIC_TAG.__init__(self, b'BIG', "Beginning Segment for Invoice")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(8, 8, "Date", StatusValues.Mandatory, 373),
+            GenericProperty(1, 22, "Transaction Set Control Number", StatusValues.Mandatory, 76),
+            GenericProperty(8, 8, "Date", StatusValues.Optional, 373),
+            GenericProperty(10, 10, "Transaction Set Control Number", StatusValues.Optional, 324)
+        ]
 
 
 BIG = _BIG()
@@ -171,7 +183,7 @@ BIG = _BIG()
 
 class _REF(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "REF", "Reference Identification")
+        GENERIC_TAG.__init__(self, b'REF', "Reference Identification")
         self._append_tag(self)
 
 
@@ -180,7 +192,7 @@ REF = _REF()
 
 class _N1(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "N1", "Name")
+        GENERIC_TAG.__init__(self, b'N1', "Name")
         self._append_tag(self)
 
 
@@ -189,7 +201,7 @@ N1 = _N1()
 
 class _N3(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "N3", "Address Information")
+        GENERIC_TAG.__init__(self, b'N3', "Address Information")
         self._append_tag(self)
 
 
@@ -198,7 +210,7 @@ N3 = _N3()
 
 class _N4(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "N4", "Geographic Location")
+        GENERIC_TAG.__init__(self, b'N4', "Geographic Location")
         self._append_tag(self)
 
 
@@ -207,7 +219,7 @@ N4 = _N4()
 
 class _ITD(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "ITD", "Terms of Sale/Deterred Terms of Sale")
+        GENERIC_TAG.__init__(self, b'ITD', "Terms of Sale/Deterred Terms of Sale")
         self._append_tag(self)
 
 
@@ -216,7 +228,7 @@ ITD = _ITD()
 
 class _DTM(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "DTM", "Date/Time Reference")
+        GENERIC_TAG.__init__(self, b'DTM', "Date/Time Reference")
         self._append_tag(self)
 
 
@@ -225,8 +237,12 @@ DTM = _DTM()
 
 class _FOB(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "FOB", "F.O.B. Related Instructions")
+        GENERIC_TAG.__init__(self, b'FOB', "F.O.B. Related Instructions")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(2, 2, "Shipment Method of Payment", StatusValues.Mandatory, 146),
+        ]
 
 
 FOB = _FOB()
@@ -234,7 +250,7 @@ FOB = _FOB()
 
 class _IT1(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "IT1", "Baseline Item Data (Invoice)")
+        GENERIC_TAG.__init__(self, b'IT1', "Baseline Item Data (Invoice)")
         self._append_tag(self)
 
 
@@ -243,7 +259,7 @@ IT1 = _IT1()
 
 class _PID(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "PID", "Product/Item Description")
+        GENERIC_TAG.__init__(self, b'PID', "Product/Item Description")
         self._append_tag(self)
 
 
@@ -252,7 +268,7 @@ PID = _PID()
 
 class _SAC(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "SAC", "Sevice, Promotion, Allowance, or Charge Information")
+        GENERIC_TAG.__init__(self, b'SAC', "Sevice, Promotion, Allowance, or Charge Information")
         self._append_tag(self)
 
 
@@ -261,7 +277,7 @@ SAC = _SAC()
 
 class _TXI(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "TXI", "Tax Information")
+        GENERIC_TAG.__init__(self, b'TXI', "Tax Information")
         self._append_tag(self)
 
 
@@ -270,8 +286,12 @@ TXI = _TXI()
 
 class _TDS(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "TDS", "Total Monetary Value Summary")
+        GENERIC_TAG.__init__(self, b'TDS', "Total Monetary Value Summary")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(1, 15, "Amount", StatusValues.Mandatory, 610),
+        ]
 
 
 TDS = _TDS()
@@ -279,8 +299,20 @@ TDS = _TDS()
 
 class _CAD(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "CAD", "Carrier Detail")
+        GENERIC_TAG.__init__(self, b'CAD', "Carrier Detail")
         self._append_tag(self)
+
+
+        self._property_array = [
+            GenericProperty(1, 2, "Transportation Method/Type Code", StatusValues.Mandatory, 91),
+            EmptyProperty(),
+            EmptyProperty(),
+            GenericProperty(2, 4, "Standard Carrier Alpha Code", StatusValues.Mandatory, 140),
+            GenericProperty(1, 35, "Routing", StatusValues.Mandatory, 387),
+            EmptyProperty(),
+            GenericProperty(2, 3, "Reference Identification Qualifier", StatusValues.Mandatory, 128),
+            GenericProperty(1, 30, "Reference Identification", StatusValues.Mandatory, 127),
+        ]
 
 
 CAD = _CAD()
@@ -288,7 +320,7 @@ CAD = _CAD()
 
 class _AMT(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "AMT", "Monetary Amount")
+        GENERIC_TAG.__init__(self, b'AMT', "Monetary Amount")
         self._append_tag(self)
 
 
@@ -297,8 +329,12 @@ AMT = _AMT()
 
 class _CTT(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "CTT", "Transaction Totals")
+        GENERIC_TAG.__init__(self, b'CTT', "Transaction Totals")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(1, 6, "Number of Line Items", StatusValues.Mandatory, 354),
+        ]
 
 
 CTT = _CTT()

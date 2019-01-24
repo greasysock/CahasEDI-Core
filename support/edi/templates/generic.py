@@ -1,9 +1,12 @@
 import io
-from .tags import _ISA, _IEA, _GS, _GE, _ST, _SE
+from .tags import _ST, _SE, GENERIC_TAG
 from .template_operators import template_list, discover_all_sections, clean_head
 
 # Generic template class operates as reader, writer, and validating class for all incoming and outdoing edi files.
 
+class TemplateContentList(list):
+    def append(self, obj : GENERIC_TAG):
+        super().append(obj)
 
 class Template:
     def __init__(self, template_id : int, template_description : str, start_data = None):
@@ -11,6 +14,7 @@ class Template:
         self._template_description = template_description
         self._ST = _ST()
         self._SE = _SE()
+        self._template_content = TemplateContentList()
 
         if start_data is not None:
             self._init_template_data = start_data
