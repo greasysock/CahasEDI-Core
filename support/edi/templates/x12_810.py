@@ -3,7 +3,6 @@
 
 from . import generic, template_operators
 from .tags import _BIG, _REF, _N1, _N3, _N4, _ITD, _DTM, _FOB, _IT1, _PID, _SAC, _TXI, _TDS, _CAD, _AMT, _CTT, StatusValues
-import io
 
 desc = "Invoice"
 i = 810
@@ -14,7 +13,7 @@ class Template(generic.Template):
         # Structured in tuple with tag reference, followed by status, occurrences, and level
         # Example ( _BIG, StatusValues.Mandatory, 1, 0 ), if occ -1, occ = >1
 
-        self._structure = [
+        structure = [
             (_BIG, StatusValues.Mandatory, 1, 0),
             (_REF, StatusValues.Optional, 12, 1),
             [(_N1, StatusValues.Optional, 200, 1),
@@ -40,8 +39,8 @@ class Template(generic.Template):
             (_CTT, StatusValues.Optional, 1, 0)
         ]
 
-        generic.Template.__init__( self, i, desc, start_data=start_data)
-
+        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
+"""
     def _init_process(self):
         super()._init_process()
         cursor = 1
@@ -54,24 +53,24 @@ class Template(generic.Template):
                 # Find all occ and raise error if occ is exceeded
                 if occ > 1 or occ == -1:
                     complete = False
-                    print(data.tag)
                     while not complete:
                         tmp_data = struct[0]()
                         found_line = None
                         itter = 0
                         for j, line in enumerate(self._init_template_data[cursor:-1]):
-                            print(line)
                             if line[0] == tmp_data.tag:
                                 found_line = line
                                 cursor += j
                                 if self._init_template_data[cursor+j+1][0] != data.tag:
                                     complete = True
-                            itter = j
+                            itter = j+1
                         if itter == self._init_template_data[cursor:-1].__len__():
                             break
-                        print(found_line)
+                        tmp_data.put_bytes_list(found_line[1:])
+                        self._template_content.append(tmp_data)
                 # Find just one occ and raise error if one is exceeded
                 elif occ == 1:
+                    itter = 0
                     for j,line in enumerate(self._init_template_data[cursor:-1]):
                         if self._init_template_data[cursor+j+1][0] == data.tag:
                             # TODO: Check to make sure occ is not exceeded. Raise exception
@@ -80,8 +79,22 @@ class Template(generic.Template):
                             found_line = line
                             cursor += j
                             break
+                        itter = j
                     data.put_bytes_list(found_line[1:])
                     self._template_content.append(data)
+
+            # Handle looping edi contents
+            elif type(struct) == list:
+                print(self._init_template_data[cursor+1])
+                tmp_data = struct[0][0]()
+                print(self._init_template_data[cursor+1][0])
+                end_strut = None
+
+                #Check data to see if recursion is present
+                if tmp_data.tag == self._init_template_data[cursor+1][0]:
+                    print("match found")
+                    #Now it is neccessary to find the looping end.
+"""
 
 
 class TemplateDescription(generic.TemplateDescription):

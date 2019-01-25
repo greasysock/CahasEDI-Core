@@ -81,7 +81,7 @@ class GENERIC_TAG:
         return self._tags
 
     def put_bytes_list(self, bytes_list : list):
-#        print(self.tag)
+#        print(self.content)
         for i,value in enumerate(bytes_list):
             if type(self._property_array[i]) == GenericProperty:
                 self._property_array[i].set_content(value)
@@ -222,6 +222,23 @@ class _ITD(GENERIC_TAG):
         GENERIC_TAG.__init__(self, b'ITD', "Terms of Sale/Deterred Terms of Sale")
         self._append_tag(self)
 
+        self._property_array = [
+            GenericProperty(2, 2, "Terms Type Code", StatusValues.Optional, 336),
+            EmptyProperty(),
+            GenericProperty(1,6,"Terms Discount Percent", StatusValues.Optional, 338),
+            EmptyProperty(),
+            GenericProperty(1,3, "Terms Discount Days Due", StatusValues.Conditional, 351),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            GenericProperty(1, 80, "Description", StatusValues.Optional, 352)
+
+        ]
+
+
 
 ITD = _ITD()
 
@@ -230,6 +247,12 @@ class _DTM(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, b'DTM', "Date/Time Reference")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(3, 3, "Date/Time Qualifier", StatusValues.Mandatory, 374),
+            GenericProperty(8, 8, "Date", StatusValues.Conditional, 373),
+
+        ]
 
 
 DTM = _DTM()
