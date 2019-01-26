@@ -46,12 +46,13 @@ class Template:
         cursor = 1
         out_list = list()
         for structure in self._structure:
-
             # Check if tag matches current tag:
             cursor, tmp_list = self._unpack_data(structure, cursor)
-            out_list = out_list + tmp_list
+            try:
+                out_list = out_list+tmp_list
+            except AttributeError:
+                pass
             formatted = True
-            print("")
 
     def _unpack_data(self, structure, cursor, in_list : list = None):
 
@@ -64,19 +65,17 @@ class Template:
             t = structure[0]().tag
             t_m = self._init_template_data[cursor][0]
 
-            print(t)
-            print(t_m)
-
             if t != t_m:
                 out_cursor = cursor
             elif t == t_m:
                 out_cursor = cursor + 1
+                data_tmp = structure[0]()
+                target_tmp = self._init_template_data[cursor][1:]
+                data_tmp.put_bytes_list(target_tmp)
                 out_list.append(t)
 
-                print("match")
             # Start recursion search
             if self._init_template_data[out_cursor][0] == structure[0]().tag:
-                print("rep found")
                 rep_list = list() + out_list
                 finish = False
                 while not finish:
@@ -88,16 +87,30 @@ class Template:
                 out_list.append(rep_list)
 
         except TypeError:
-            out_cursor, out_list = self._unpack_data(structure[0], cursor)
+            out_cursor, out_list = self._unpack_data(structure[0], cursor, out_list)
             if out_cursor != cursor:
-                print("rec found")
                 rec = structure[1:]
 
                 tmp_list = list()
                 tmp_list = tmp_list + out_list
                 tmp_out_list = list()
                 for s in rec[1:]:
-                    out_cursor, tmp_list = self._unpack_data(s, out_cursor, tmp_list)
+                    if type(s) == list:
+                        rec_list = list()
+                        count = 0
+                        for recursion in s:
+                            out_cursor, rec_list_tmp = self._unpack_data(recursion, out_cursor)
+                            if rec_list_tmp == []:
+                                count += 1
+                            else:
+                                rec_list.append(rec_list_tmp)
+
+                        if count != s.__len__():
+                            tmp_list.append(rec_list)
+
+                    elif type(s) == tuple:
+                        out_cursor, tmp_list = self._unpack_data(s, out_cursor, tmp_list)
+
                 tmp_out_list.append(tmp_list)
                 out_list = tmp_out_list
                 if self._init_template_data[out_cursor][0] == rec[0][0]().tag:
@@ -111,8 +124,10 @@ class Template:
                         if self._init_template_data[out_cursor][0] != rec[0][0]().tag:
                             finish = True
                         out_list.append(tmp_list)
-        print(out_cursor)
-        print(out_list)
+                t = list()
+                t.append(out_list)
+                out_list = t
+
         return out_cursor, out_list
 
     def __str__(self):

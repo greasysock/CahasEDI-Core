@@ -82,10 +82,11 @@ class GENERIC_TAG:
 
     def put_bytes_list(self, bytes_list : list):
 #        print(self.content)
+        print(self.tag)
         for i,value in enumerate(bytes_list):
             if type(self._property_array[i]) == GenericProperty:
                 self._property_array[i].set_content(value)
-#                print(self._property_array[i])
+                print(self._property_array[i])
 
 
 # Tag list for layered tags
@@ -195,6 +196,13 @@ class _N1(GENERIC_TAG):
         GENERIC_TAG.__init__(self, b'N1', "Name")
         self._append_tag(self)
 
+        self._property_array = [
+            GenericProperty(2,3, "Entity Identifier Code", StatusValues.Mandatory, 98),
+            GenericProperty(1,60, "Name", StatusValues.Conditional, 93),
+            GenericProperty(1,2, "Identification Code Qualifier", StatusValues.Conditional, 66),
+            GenericProperty(2,80, "Identification Code", StatusValues.Conditional, 67)
+        ]
+
 
 N1 = _N1()
 
@@ -204,6 +212,10 @@ class _N3(GENERIC_TAG):
         GENERIC_TAG.__init__(self, b'N3', "Address Information")
         self._append_tag(self)
 
+        self._property_array = [
+            GenericProperty(1, 55, "Address Information", StatusValues.Mandatory, 166),
+        ]
+
 
 N3 = _N3()
 
@@ -212,6 +224,14 @@ class _N4(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, b'N4', "Geographic Location")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(2, 30, "City Name", StatusValues.Optional, 19),
+            GenericProperty(2, 2, "State or Province Code", StatusValues.Optional, 156),
+            GenericProperty(3, 15, "Postal Code", StatusValues.Optional, 116),
+            GenericProperty(2, 3, "Country Code", StatusValues.Optional, 26),
+
+        ]
 
 
 N4 = _N4()
@@ -276,6 +296,20 @@ class _IT1(GENERIC_TAG):
         GENERIC_TAG.__init__(self, b'IT1', "Baseline Item Data (Invoice)")
         self._append_tag(self)
 
+        self._property_array = [
+            GenericProperty(1, 20, "Assigned Identification", StatusValues.Optional, 350),
+            GenericProperty(1, 20, "Quantity Invoiced", StatusValues.Conditional, 358),
+            GenericProperty(2, 2, "Unit or Basis for Measurement", StatusValues.Conditional, 355),
+            GenericProperty(1, 17, "Unit Price", StatusValues.Conditional, 212),
+            GenericProperty(2, 2, "Basis of Unit Price Code", StatusValues.Optional, 639),
+            GenericProperty(2, 2, "Product/Service ID Qualifier", StatusValues.Mandatory, 235),
+            GenericProperty(1, 48, "Product/Service ID", StatusValues.Mandatory, 234),
+            GenericProperty(2, 2, "Product/Service ID Qualifier", StatusValues.Mandatory, 235),
+            GenericProperty(1, 48, "Product/Service ID", StatusValues.Mandatory, 234),
+            GenericProperty(2, 2, "Product/Service ID Qualifier", StatusValues.Mandatory, 235),
+            GenericProperty(1, 48, "Product/Service ID", StatusValues.Mandatory, 234),
+        ]
+
 
 IT1 = _IT1()
 
@@ -284,6 +318,14 @@ class _PID(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, b'PID', "Product/Item Description")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(1, 1, "Item Description Type", StatusValues.Mandatory, 349),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            GenericProperty(1, 80, "Description", StatusValues.Conditional, 352),
+        ]
 
 
 PID = _PID()
