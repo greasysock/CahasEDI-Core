@@ -82,7 +82,7 @@ class GENERIC_TAG:
 
     def put_bytes_list(self, bytes_list : list):
 #        print(self.content)
-        print(self.tag)
+        print(self.content)
         for i,value in enumerate(bytes_list):
             if type(self._property_array[i]) == GenericProperty:
                 self._property_array[i].set_content(value)
@@ -186,6 +186,10 @@ class _REF(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, b'REF', "Reference Identification")
         self._append_tag(self)
+        self._property_array = [
+            GenericProperty(2, 3, "Reference Identification Qualifier", StatusValues.Mandatory, 128),
+            GenericProperty(1, 30, "Reference Identification", StatusValues.Conditional, 127)
+        ]
 
 
 REF = _REF()
@@ -336,6 +340,24 @@ class _SAC(GENERIC_TAG):
         GENERIC_TAG.__init__(self, b'SAC', "Sevice, Promotion, Allowance, or Charge Information")
         self._append_tag(self)
 
+        self._property_array = [
+            GenericProperty(1, 1, "Allowance or Charge Indicator", StatusValues.Mandatory, 248),
+            GenericProperty(4, 4, "Service, Promotion, Allowance, or Charge Code", StatusValues.Conditional, 1300),
+            EmptyProperty(),
+            EmptyProperty(),
+            GenericProperty(1, 15, "Amount", StatusValues.Optional, 610),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            GenericProperty(2, 2, "Allowance or Charge Method of Handling Code", StatusValues.Optional, 331),
+            EmptyProperty(),
+            EmptyProperty(),
+            GenericProperty(1, 80, "Description", StatusValues.Conditional, 352)
+        ]
+
 
 SAC = _SAC()
 
@@ -344,6 +366,19 @@ class _TXI(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, b'TXI', "Tax Information")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(2,2,"Tax Type Code",StatusValues.Mandatory,963),
+            GenericProperty(1,18,"Monetary Amount" , StatusValues.Conditional,782),
+            GenericProperty(1,10,"Percent" , StatusValues.Conditional,954),
+            GenericProperty(2,2,"Tax Jurisdiction Code Qualifier" , StatusValues.Conditional,955),
+            GenericProperty(1, 10, "Tax Jurisdiction Code", StatusValues.Conditional,956),
+            GenericProperty(1,1,"Tax Exempt Code" , StatusValues.Conditional,441),
+            GenericProperty(1,1,"Relationship Code" , StatusValues.Optional,662),
+            GenericProperty(1,9,"Dollar Basis For Percent" , StatusValues.Optional,828),
+            GenericProperty(1,20, "Tax Identification Number", StatusValues.Optional,325),
+            GenericProperty(1,20, "Assigned Identification", StatusValues.Optional,350),
+        ]
 
 
 TXI = _TXI()
@@ -387,6 +422,11 @@ class _AMT(GENERIC_TAG):
     def __init__(self):
         GENERIC_TAG.__init__(self, b'AMT', "Monetary Amount")
         self._append_tag(self)
+
+        self._property_array = [
+            GenericProperty(1, 18, "Amount Qualifier Code", StatusValues.Mandatory, 522),
+            GenericProperty(1,18, "Monetary Amount", StatusValues.Mandatory, 782)
+        ]
 
 
 AMT = _AMT()
@@ -446,16 +486,23 @@ IEA = _IEA()
 
 class _BIA(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "BIA", "Beginning Segment for Inventory Inquiry/Advice")
+        GENERIC_TAG.__init__(self, b'BIA', "Beginning Segment for Inventory Inquiry/Advice")
         self._append_tag(self)
 
 
 BIA = _BIA()
 
+class _BEG(GENERIC_TAG):
+    def __init__(self):
+        GENERIC_TAG.__init__(self, b'BEG', "Beginning Segment for Purchase Order")
+        self._append_tag(self)
+
+
+BEG = _BEG()
 
 class _LIN(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "LIN", "Item Identification")
+        GENERIC_TAG.__init__(self, b'LIN', "Item Identification")
         self._append_tag(self)
 
 
@@ -464,7 +511,7 @@ LIN = _LIN()
 
 class _QTY(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "QTY", "Quantity Available")
+        GENERIC_TAG.__init__(self, b'QTY', "Quantity Available")
         self._append_tag(self)
 
 
@@ -473,7 +520,7 @@ QTY = _QTY()
 
 class _SCH(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "SCH", "Line Item Schedule")
+        GENERIC_TAG.__init__(self, b'SCH', "Line Item Schedule")
         self._append_tag(self)
 
 
@@ -482,7 +529,7 @@ SCH = _SCH()
 
 class _CSH(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "CSH", "Sales Requirements")
+        GENERIC_TAG.__init__(self, b'CSH', "Sales Requirements")
         self._append_tag(self)
 
 
@@ -491,7 +538,7 @@ CSH = _CSH()
 
 class _PWK(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "PWK", "Paperwork")
+        GENERIC_TAG.__init__(self, b'PWK', "Paperwork")
         self._append_tag(self)
 
 
@@ -500,7 +547,7 @@ PWK = _PWK()
 
 class _TD5(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "TD5", "Carrier Details (Routing Sequence/Transit Time)")
+        GENERIC_TAG.__init__(self, b'TD5', "Carrier Details (Routing Sequence/Transit Time)")
         self._append_tag(self)
 
 
@@ -509,7 +556,7 @@ TD5 = _TD5()
 
 class _TD4(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "TD4", "Carrier Details (Special Handling, or Hazardous Materials, or Both)")
+        GENERIC_TAG.__init__(self, b'TD4', "Carrier Details (Special Handling, or Hazardous Materials, or Both)")
         self._append_tag(self)
 
 
@@ -518,7 +565,7 @@ TD4 = _TD4()
 
 class _PER(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "PER", "Administrative Communications Contact")
+        GENERIC_TAG.__init__(self, b'PER', "Administrative Communications Contact")
         self._append_tag(self)
 
 
@@ -527,7 +574,7 @@ PER = _PER()
 
 class _PO1(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "PO1", "Baseline Item Data")
+        GENERIC_TAG.__init__(self, b'PO1', "Baseline Item Data")
         self._append_tag(self)
 
 
@@ -536,7 +583,7 @@ PO1 = _PO1()
 
 class _CTP(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "CTP", "Pricing Information")
+        GENERIC_TAG.__init__(self, b'CTP', "Pricing Information")
         self._append_tag(self)
 
 
@@ -545,7 +592,7 @@ CTP = _CTP()
 
 class _BSN(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "BSN", "Beggining Segment for Ship Notice")
+        GENERIC_TAG.__init__(self, b'BSN', "Beggining Segment for Ship Notice")
         self._append_tag(self)
 
 
@@ -554,7 +601,7 @@ BSN = _BSN()
 
 class _HL(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "HL", "Hierarchical Level – Shipment")
+        GENERIC_TAG.__init__(self, b'HL', "Hierarchical Level – Shipment")
         self._append_tag(self)
 
 
@@ -563,7 +610,7 @@ HL = _HL()
 
 class _TD1(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "TD1", "Carrier Details (Quantity and Weight)")
+        GENERIC_TAG.__init__(self, b'TD1', "Carrier Details (Quantity and Weight)")
         self._append_tag(self)
 
 
@@ -572,7 +619,7 @@ TD1 = _TD1()
 
 class _PRF(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "PRF", "Purchase Order Reference")
+        GENERIC_TAG.__init__(self, b'PRF', "Purchase Order Reference")
         self._append_tag(self)
 
 
@@ -581,7 +628,7 @@ PRF = _PRF()
 
 class _MAN(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "MAN", "Marks and Numbers")
+        GENERIC_TAG.__init__(self, b'MAN', "Marks and Numbers")
         self._append_tag(self)
 
 
@@ -590,7 +637,7 @@ MAN = _MAN()
 
 class _SN1(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "SN1", "Item Detail (Shipment)")
+        GENERIC_TAG.__init__(self, b'SN1', "Item Detail (Shipment)")
         self._append_tag(self)
 
 
@@ -599,7 +646,7 @@ SN1 = _SN1()
 
 class _BCH(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "BCH", "Beggining Segment for Purchase Order Change")
+        GENERIC_TAG.__init__(self, b'BCH', "Beggining Segment for Purchase Order Change")
         self._append_tag(self)
 
 
@@ -608,7 +655,7 @@ BCH = _BCH()
 
 class _POC(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "POC", "Line Item Change")
+        GENERIC_TAG.__init__(self, b'POC', "Line Item Change")
         self._append_tag(self)
 
 
@@ -617,7 +664,7 @@ POC = _POC()
 
 class _BAK(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "BAK", "Beggining Segment for Purchase Order Aknowledgment")
+        GENERIC_TAG.__init__(self, b'BAK', "Beggining Segment for Purchase Order Aknowledgment")
         self._append_tag(self)
 
 
@@ -626,7 +673,7 @@ BAK = _BAK()
 
 class _CUR(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "CUR", "Currency")
+        GENERIC_TAG.__init__(self, b'CUR', "Currency")
         self._append_tag(self)
 
 
@@ -635,7 +682,7 @@ CUR = _CUR()
 
 class _AK1(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "AK1", "Functional Group Response Header")
+        GENERIC_TAG.__init__(self, b'AK1', "Functional Group Response Header")
         self._append_tag(self)
 
 
@@ -644,7 +691,7 @@ AK1 = _AK1()
 
 class _AK2(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "AK2", "Transaction Set Response Header")
+        GENERIC_TAG.__init__(self, b'AK2', "Transaction Set Response Header")
         self._append_tag(self)
 
 
@@ -653,7 +700,7 @@ AK2 = _AK2()
 
 class _AK3(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "AK3", "Data Segment Note")
+        GENERIC_TAG.__init__(self, b'AK3', "Data Segment Note")
         self._append_tag(self)
 
 
@@ -662,7 +709,7 @@ AK3 = _AK3()
 
 class _AK4(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "AK4", "Data Element Note")
+        GENERIC_TAG.__init__(self, b'AK4', "Data Element Note")
         self._append_tag(self)
 
 
@@ -671,7 +718,7 @@ AK4 = _AK4()
 
 class _AK5(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "AK5", "Transaction Set Response Trailer")
+        GENERIC_TAG.__init__(self, b'AK5', "Transaction Set Response Trailer")
         self._append_tag(self)
 
 
@@ -680,7 +727,7 @@ AK5 = _AK5()
 
 class _AK9(GENERIC_TAG):
     def __init__(self):
-        GENERIC_TAG.__init__(self, "AK9", "Functional Group Response Trailer")
+        GENERIC_TAG.__init__(self, b'AK9', "Functional Group Response Trailer")
         self._append_tag(self)
 
 
