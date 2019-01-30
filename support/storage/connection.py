@@ -21,6 +21,7 @@ class Partnership(Base):
     interchange_qualifier = Column(String(2), nullable=False)
     watch_dir = Column(String(250), nullable=False, unique=True)
     send_dir = Column(String(250), nullable=False, unique=True)
+    last_check = Column(DateTime)
 
 
 class Message(Base):

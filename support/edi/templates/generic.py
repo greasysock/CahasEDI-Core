@@ -130,6 +130,23 @@ class Template:
 
         return out_cursor, out_list
 
+    def get_detailed_structure(self):
+        out_ = dict()
+        if self._structure:
+            for i,structure in enumerate(self._structure):
+                if type(structure) == tuple:
+                    out_dict = dict()
+                    out_dict['occurrences'] = dict()
+                    out_dict['occurrences']['max'] = structure[2]
+                    out_dict['occurrences']['min'] = structure[3]
+                    tag = structure[0]()
+                    out_dict['description'] = tag.content
+                    out_dict['tag'] = str(tag.tag)
+                    out_[i] = out_dict
+
+            return out_
+        return False
+
     def __str__(self):
         return "| {} Template - \"{}\" |".format(self._template_id, self._template_description)
 
