@@ -9,6 +9,21 @@ class Partner:
         self._watch_dir = watch_dir
         self._send_dir = send_dir
 
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def id_qualifier(self):
+        return self._id_qualifier
+
+    @property
+    def watch_dir(self):
+        return self._watch_dir
+    @property
+    def send_dir(self):
+        return self._send_dir
+
 
 class File:
 
@@ -21,6 +36,7 @@ class File:
         }
 
         self._database_definition = {
+            'type':'postgresql',
             'login': 'login',
             'password': 'pass',
             'database name' : 'cahasEDI'
@@ -76,3 +92,21 @@ class File:
                         partner['Watch Directory'],
                         partner['Send Directory'])
             self._partnerships.append(p)
+
+    @property
+    def id(self):
+        return self._id
+    @property
+    def id_qualifier(self):
+        return self._id_qualifier
+    @property
+    def db_login(self):
+        return self._db_login
+    @property
+    def db_password(self):
+        return self._db_pass
+    @property
+    def db_name(self):
+        return self._db_name
+    def get_partners(self):
+        return self._partnerships
