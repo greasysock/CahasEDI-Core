@@ -24,4 +24,6 @@ class Template:
                 details = t.get_detailed_structure()
                 if details:
                     resp.body = json.dumps(details, indent=2)
+                else:
+                    resp.status = falcon.HTTP_400
                 break

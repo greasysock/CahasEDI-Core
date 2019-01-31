@@ -3,20 +3,22 @@ import json, os, sys
 
 
 class Partner:
-    def __init__(self, id_qualifier, id, watch_dir, send_dir):
+    def __init__(self, id_qualifier, id, watch_dir, send_dir, partner_name):
         self._id = id
+        self._name = partner_name
         self._id_qualifier = id_qualifier
         self._watch_dir = watch_dir
         self._send_dir = send_dir
 
     @property
+    def name(self):
+        return self._name
+    @property
     def id(self):
         return self._id
-
     @property
     def id_qualifier(self):
         return self._id_qualifier
-
     @property
     def watch_dir(self):
         return self._watch_dir
@@ -29,6 +31,7 @@ class File:
 
     def __init__(self, config_file : str):
         self._partnership_definition = {
+            'Partner Name': 'Corp Name',
             'ID Qualifier': 'ZZ',
             'Interchange ID': 'SomeID',
             'Watch Directory': './SomeWatchDirectory',
@@ -90,7 +93,8 @@ class File:
             p = Partner(partner['ID Qualifier'],
                         partner['Interchange ID'],
                         partner['Watch Directory'],
-                        partner['Send Directory'])
+                        partner['Send Directory'],
+                        partner['Partner Name'])
             self._partnerships.append(p)
 
     @property

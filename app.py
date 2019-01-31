@@ -8,7 +8,7 @@ from support.storage import connection
 
 conf = config.File("config.json")
 
-engine = connection.connect(conf.db_login, conf.db_password, conf.db_name, 'postgresql')
+engine = connection.connect(conf, 'postgresql')
 
 session_factory = sessionmaker(bind=engine)
 Session = scoped_session(session_factory)

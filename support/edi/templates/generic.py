@@ -1,5 +1,5 @@
 import io
-from .tags import _ST, _SE, GENERIC_TAG
+from .tags import _ST, _SE, GENERIC_TAG, EmptyProperty, GenericProperty
 from .template_operators import template_list, discover_all_sections, clean_head
 
 # Generic template class operates as reader, writer, and validating class for all incoming and outdoing edi files.
@@ -130,20 +130,52 @@ class Template:
 
         return out_cursor, out_list
 
-    def get_detailed_structure(self):
-        out_ = dict()
-        if self._structure:
-            for i,structure in enumerate(self._structure):
-                if type(structure) == tuple:
-                    out_dict = dict()
-                    out_dict['occurrences'] = dict()
-                    out_dict['occurrences']['max'] = structure[2]
-                    out_dict['occurrences']['min'] = structure[3]
-                    tag = structure[0]()
-                    out_dict['description'] = tag.content
-                    out_dict['tag'] = str(tag.tag)
-                    out_[i] = out_dict
+    # Get
+    def get_detailed_structure(self, input_structure=None):
 
+        if input_structure:
+            out_ = dict()
+            struct = input_structure
+        else:
+            out_ = dict()
+            struct = self._structure
+        if struct:
+            if type(struct) == tuple:
+                out_dict = dict()
+                out_dict['occurrences'] = dict()
+                out_dict['occurrences']['max'] = struct[2]
+                out_dict['occurrences']['min'] = struct[3]
+                out_dict['importance'] = struct[1].value.decode()
+                tag = struct[0]()
+                out_dict['description'] = tag.content
+                out_dict['tag'] = tag.tag.decode()
+                out_dict['properties'] = dict()
+                for k,prop in enumerate(tag.get_property_array()):
+                    if type(prop) == GenericProperty:
+                        prop_dict = dict()
+                        prop_dict['name'] = prop.name
+                        prop_dict['length'] = dict()
+                        prop_dict['length']['max'] = prop.max_length
+                        prop_dict['length']['min'] = prop.min_length
+                        prop_dict['importance'] = prop.status.value.decode()
+                        try:
+                            prop_dict['content'] = prop.content.decode()
+                        except AttributeError:
+                            prop_dict['content'] = prop.content
+                        out_dict['properties'][k] = prop_dict
+
+                    elif type(prop) == EmptyProperty:
+                        out_dict['properties'][k] = None
+                return out_dict
+
+            for i,structure in enumerate(struct):
+                if type(structure) == tuple:
+                    out_[i] = self.get_detailed_structure(input_structure=structure)
+                elif type(structure) == list:
+                    out_dict = dict()
+                    for j,inner_structure in enumerate(structure):
+                        out_dict[j] = self.get_detailed_structure(input_structure=inner_structure)
+                    out_[i] = out_dict
             return out_
         return False
 

@@ -31,6 +31,26 @@ class GenericProperty:
 
         self._content = None
 
+    @property
+    def min_length(self):
+        return self._min_length
+
+    @property
+    def max_length(self):
+        return self._max_length
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def content(self):
+        return self._content
+
     def set_content(self, content):
         self._content = content
 
@@ -79,6 +99,9 @@ class GENERIC_TAG:
 
     def get_tags(self):
         return self._tags
+
+    def get_property_array(self):
+        return self._property_array
 
     def put_bytes_list(self, bytes_list : list):
 #        print(self.content)
