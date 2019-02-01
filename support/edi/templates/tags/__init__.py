@@ -52,7 +52,9 @@ class GenericProperty:
         return self._content
 
     def set_content(self, content):
-        self._content = content
+
+        if self._content is None:
+            self._content = content
 
     def __str__(self):
         return " [ {}: \"{}\" ] ".format(self._name, self._content.decode("utf-8"))
@@ -70,9 +72,19 @@ class GENERIC_TAG:
         self._tag = tag
         self._status = status
         self._max_occ = max_occ
+        self._min_occ = 1
         self._level = level
         self._content = content
         self._property_array = list()
+
+    def set_status(self, status: StatusValues):
+        self._status = status
+
+    def set_max(self, max: int):
+        self._max_occ = max
+
+    def set_min(self, min: int):
+        self._min_occ = min
 
     def _append_tag(self, tag_obj):
         self._tags.append(tag_obj)
@@ -82,8 +94,12 @@ class GENERIC_TAG:
         return self._status
 
     @property
-    def max_occ(self):
+    def max(self):
         return self._max_occ
+
+    @property
+    def min(self):
+        return self._min_occ
 
     @property
     def level(self):
@@ -108,7 +124,7 @@ class GENERIC_TAG:
         print(self.content)
         for i,value in enumerate(bytes_list):
             if type(self._property_array[i]) == GenericProperty:
-                self._property_array[i].set_content(value)
+                self._property_array[i].set_content(value.strip())
                 print(self._property_array[i])
 
 

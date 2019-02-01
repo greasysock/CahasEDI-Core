@@ -153,9 +153,11 @@ class TemplateGroup(list):
 
 
 class EdiGroup:
-    def __init__(self, init_data=None):
+    def __init__(self,isa:_ISA ,init_data=None):
         self._GS = _GS()
         self._GE = _GE()
+        self._ISA = isa
+
         self._template_group = TemplateGroup()
         if init_data is not None:
             self._init_group_data = init_data
@@ -185,7 +187,11 @@ class EdiGroup:
                 if template.identifier_code == type:
                     temp = template.get_template()
                     out = temp(section)
+                    out.set_isa_gs(self._ISA, self._GS)
                     self._template_group.append(out)
+
+    def get_content(self):
+        return self._template_group
 
 
 class EdiGroups(list):
@@ -222,8 +228,15 @@ class EdiHeader:
         found_list = discover_all_sections(b'GS', b'GE', self._init_edi_file)
 
         for bytes_list in found_list:
-            tmp = EdiGroup(bytes_list)
+            tmp = EdiGroup(self._ISA, bytes_list)
             self._edi_groups.append(tmp)
+
+    # Returns all content in EDI file
+    def get_all_content(self):
+        content = TemplateGroup()
+        for group in self._edi_groups:
+            content += group.get_content()
+        return content
 
 
 class EdiFile:
@@ -268,5 +281,8 @@ class EdiFile:
         seperated_sections = list()
         for section in sections:
             seperated = section.split(self._separator)
-            seperated_sections.append(seperated)
-        self._edi_header = EdiHeader(seperated_sections)
+            tmp_seperated = list()
+            for sep in seperated:
+                tmp_seperated.append(sep.strip())
+            seperated_sections.append(tmp_seperated)
+        self.edi_header = EdiHeader(seperated_sections)
