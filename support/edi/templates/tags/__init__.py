@@ -121,11 +121,11 @@ class GENERIC_TAG:
 
     def put_bytes_list(self, bytes_list : list):
 #        print(self.content)
-        print(self.content)
+#        print(self.content)
         for i,value in enumerate(bytes_list):
             if type(self._property_array[i]) == GenericProperty:
                 self._property_array[i].set_content(value.strip())
-                print(self._property_array[i])
+#                print(self._property_array[i])
 
 
 # Tag list for layered tags

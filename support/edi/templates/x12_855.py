@@ -1,14 +1,29 @@
 from . import generic
-import io
-
+from .tags import _BAK, _CUR, _REF, _CSH, _PO1, _PID, _ACK, _CTT, StatusValues
 
 desc = "Purchase Order Acknowledgment"
 i = 855
 
 class Template(generic.Template):
-    def __init__(self, edi_file: io.BytesIO):
-        self._edi_file = edi_file
-        generic.Template.__init__(self, self._edi_file, i, desc)
+    def __init__(self, start_data = None):
+
+        structure = [
+            (_BAK, StatusValues.Mandatory, 1, 0),
+            (_CUR, StatusValues.Optional, 1, 0),
+            (_REF, StatusValues.Mandatory, -1, 1),
+            (_CSH, StatusValues.Optional, 1, 0),
+            [(_PO1, StatusValues.Optional, 100000, 1),
+                (_PO1, StatusValues.Mandatory, 1, 1),
+                [(_PID, StatusValues.Optional, 1000, 2),
+                    (_PID, StatusValues.Mandatory, 1, 2)],
+                [(_ACK, StatusValues.Mandatory, 104, 2),
+                    (_ACK, StatusValues.Mandatory, 1, 2)]],
+            [(_CTT, StatusValues.Optional, 1, 1),
+                (_CTT, StatusValues.Optional, 1, 1)]
+        ]
+
+        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
+
 
 
 class TemplateDescription(generic.TemplateDescription):
