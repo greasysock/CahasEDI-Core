@@ -116,12 +116,24 @@ class GENERIC_TAG:
     def get_tags(self):
         return self._tags
 
+    # Reverses put_bytes_list and returns formatted correctly for file generation
+    def get_bytes_list(self):
+        out_list = list()
+        out_list.append(self.tag)
+        for property in self._property_array:
+            if type(property) == GenericProperty:
+                out_list.append(property.content)
+            else:
+                out_list.append(b'')
+        return out_list
+
     def get_property_array(self):
         return self._property_array
 
     def put_bytes_list(self, bytes_list : list):
 #        print(self.content)
-#        print(self.content)
+#        print(self.tag)
+#        print(bytes_list)
         for i,value in enumerate(bytes_list):
             if type(self._property_array[i]) == GenericProperty:
                 self._property_array[i].set_content(value.strip())
@@ -833,6 +845,10 @@ class _BCH(GENERIC_TAG):
             EmptyProperty(),
             EmptyProperty(),
             GenericProperty(8,8,"Date",StatusValues.Mandatory,373),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
+            EmptyProperty(),
             GenericProperty(8,8,"Date",StatusValues.Optional, 373)
         ]
 

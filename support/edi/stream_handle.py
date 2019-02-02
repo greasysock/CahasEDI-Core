@@ -152,6 +152,16 @@ class TemplateGroup(list):
         super().append(obj)
 
 
+def discover_template(st_se):
+    type = int(st_se[0][1])
+    out = None
+    for template in template_operators.template_list:
+        if template.identifier_code == type:
+            temp = template.get_template()
+            out = temp(st_se)
+    return out
+
+
 class EdiGroup:
     def __init__(self,isa:_ISA ,init_data=None):
         self._GS = _GS()
@@ -204,6 +214,9 @@ class EdiHeader:
         self._ISA = _ISA()
         self._IEA = _IEA()
         self._edi_groups = EdiGroups()
+
+        # For transactions with single message
+        self._template = None
         if init_data is not None:
             self._init_edi_file = init_data
             self._init_process()
@@ -227,13 +240,31 @@ class EdiHeader:
         # discover all gs/ge Groups
         found_list = discover_all_sections(b'GS', b'GE', self._init_edi_file)
 
-        for bytes_list in found_list:
-            tmp = EdiGroup(self._ISA, bytes_list)
-            self._edi_groups.append(tmp)
+        # Check to see if no groups exist
+        if found_list == []:
+            found_list = discover_all_sections(b'ST', b'SE', self._init_edi_file)
+            if found_list.__len__() == 1:
+                self._template = discover_template(found_list[0])
+            # TODO: Raise some error that either no content exists or that content is not contained in group.
+            else:
+                pass
+        else:
+            for bytes_list in found_list:
+                tmp = EdiGroup(self._ISA, bytes_list)
+                self._edi_groups.append(tmp)
+
+    def append_group(self, group: EdiGroup):
+        self._edi_groups.append(group)
+
+    def append_template(self, template: generic.Template):
+        self._template = template
 
     # Returns all content in EDI file
     def get_all_content(self):
         content = TemplateGroup()
+        if self._template:
+            content.append(self._template)
+            return content
         for group in self._edi_groups:
             content += group.get_content()
         return content
