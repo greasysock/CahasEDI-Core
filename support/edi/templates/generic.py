@@ -153,6 +153,30 @@ class Template:
             return out_dict
         return False
 
+    # Returns list of list of bytes of content. Requires recursion, based off get_detailed_structure
+    def get_bytes_list(self, input_content=None):
+        if input_content:
+            content = input_content
+        else:
+            content = self._data
+        out_list = list()
+        if content:
+            if type(content) != list:
+                return content.get_bytes_list()
+            for section in content:
+                if type(section) != list:
+                    out_list.append(self.get_bytes_list(input_content=section))
+                elif type(section) == list:
+                    tmp_out_list = list()
+                    for inner_section in section:
+                        tmp_out_list.append(self.get_bytes_list(input_content=inner_section))
+                    out_list = out_list + tmp_out_list
+
+            out_list = [self._ST.get_bytes_list()] + out_list + [self._SE.get_bytes_list()]
+            return out_list
+
+        return False
+
     # Get detailed structure
     def get_detailed_structure(self, input_structure=None):
 
@@ -177,6 +201,10 @@ class Template:
                     out_[i] = out_dict
             return out_
         return False
+
+    # TODO:
+    def put_detailed_structure(self, detailed_structure):
+        pass
 
     @property
     def template_type(self):

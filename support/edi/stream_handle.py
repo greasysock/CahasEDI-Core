@@ -269,6 +269,15 @@ class EdiHeader:
             content += group.get_content()
         return content
 
+    # Get all bytes content from all content headers and groups
+    def get_all_bytes_lists(self):
+        out_list = list()
+
+        # Method for single template form
+        if self._template:
+            return [self._ISA.get_bytes_list()] + self._template.get_bytes_list() + [self._IEA.get_bytes_list()]
+
+
 
 class EdiFile:
     def __init__(self, edi_file : io.BytesIO):
@@ -290,7 +299,26 @@ class EdiFile:
             self._assign_write()
 
     def _assign_write(self):
-        pass
+        self.edi_header = EdiHeader()
+
+    # Returns file in correctly formatted edi format
+    def get_open_file(self):
+        out_memory = io.BytesIO()
+        for section in self.edi_header.get_all_bytes_lists():
+            out_line = b''
+            for i,s in enumerate(section):
+                if i+1 < section.__len__() and s:
+                    out_line += s + self._separator
+                elif s:
+                    out_line += s + self._terminator
+                elif not s:
+                    if i + 1 < section.__len__():
+                        out_line += self._separator
+                    else:
+                        out_line += self._terminator
+            out_memory.write(out_line)
+        out_memory.seek(0)
+        return out_memory
 
     def _assign_read_mod(self):
         self._edi_file.seek(0)
