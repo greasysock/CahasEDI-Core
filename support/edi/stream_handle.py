@@ -215,6 +215,8 @@ class EdiHeader:
         self._IEA = _IEA()
         self._edi_groups = EdiGroups()
 
+        self._ack_requested = False
+
         # For transactions with single message
         self._template = None
         if init_data is not None:
@@ -236,6 +238,16 @@ class EdiHeader:
             self._ISA.put_bytes_list(isa[1:])
         if iea is not None:
             self._IEA.put_bytes_list(iea[1:])
+
+        # Discover if Ack Requested
+        props = self._ISA.get_property_array()
+        for prop in props:
+            if prop.tag == 13:
+                self._ack_requested = int(prop.content) == 1
+
+        # Ack
+        if self._ack_requested:
+            pass
 
         # discover all gs/ge Groups
         found_list = discover_all_sections(b'GS', b'GE', self._init_edi_file)
@@ -271,13 +283,18 @@ class EdiHeader:
 
     # Get all bytes content from all content headers and groups
     def get_all_bytes_lists(self):
-        out_list = list()
-
         # Method for single template form
         if self._template:
             return [self._ISA.get_bytes_list()] + self._template.get_bytes_list() + [self._IEA.get_bytes_list()]
 
-
+        out_list = list()
+        out_list.append(self._ISA.get_bytes_list())
+        for group in self._edi_groups:
+            for content in group.get_content():
+                print(content.get_bytes_list())
+                out_list += content.get_bytes_list()
+        out_list += self._IEA.get_bytes_list()
+        return out_list
 
 class EdiFile:
     def __init__(self, edi_file : io.BytesIO):

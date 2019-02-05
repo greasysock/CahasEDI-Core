@@ -1,6 +1,7 @@
 from ..storage.connection import Partnership
 import json
 
+
 class Partners:
 
     def on_get(self, req, resp):
@@ -14,6 +15,7 @@ class Partners:
             partner_dict['interchange qualifier'] = partner.interchange_qualifier
             out_partners.append(partner_dict)
         resp.body = json.dumps(out_partners, indent=2)
+
 
 class Partner:
 

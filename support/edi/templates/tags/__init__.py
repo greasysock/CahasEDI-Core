@@ -48,6 +48,10 @@ class GenericProperty:
         return self._status
 
     @property
+    def tag(self):
+        return self._tag
+
+    @property
     def content(self):
         return self._content
 

@@ -169,10 +169,12 @@ class Template:
                 elif type(section) == list:
                     tmp_out_list = list()
                     for inner_section in section:
-                        tmp_out_list.append(self.get_bytes_list(input_content=inner_section))
+                        tmp_out_list += self.get_bytes_list(input_content=inner_section)
+                    if type(tmp_out_list[0]) != list:
+                        tmp_out_list = [tmp_out_list]
                     out_list = out_list + tmp_out_list
-
-            out_list = [self._ST.get_bytes_list()] + out_list + [self._SE.get_bytes_list()]
+            if content == self._data:
+                out_list = [self._ST.get_bytes_list()] + out_list + [self._SE.get_bytes_list()]
             return out_list
 
         return False
