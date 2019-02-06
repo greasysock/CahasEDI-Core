@@ -2,6 +2,7 @@ from .templates import generic,template_operators, x12_997, x12_860, x12_856, x1
 from .templates.tags import _ISA, _IEA, _GS, _GE
 from . import exceptions
 import io, datetime
+from . import acknowledgement
 # Class for opening and assigning correct edi template to incoming and outgoing edi files for decoding/encoding on-the-fly
 
 
@@ -203,6 +204,9 @@ class EdiGroup:
     def get_content(self):
         return self._template_group
 
+    def get_gs_ge(self):
+        return self._GS, self._GE
+
 
 class EdiGroups(list):
     def append(self, edi_group : EdiGroup):
@@ -216,6 +220,7 @@ class EdiHeader:
         self._edi_groups = EdiGroups()
 
         self._ack_requested = False
+        self.ack = None
 
         # For transactions with single message
         self._template = None
@@ -245,9 +250,6 @@ class EdiHeader:
             if prop.tag == 13:
                 self._ack_requested = int(prop.content) == 1
 
-        # Ack
-        if self._ack_requested:
-            pass
 
         # discover all gs/ge Groups
         found_list = discover_all_sections(b'GS', b'GE', self._init_edi_file)
@@ -264,6 +266,11 @@ class EdiHeader:
             for bytes_list in found_list:
                 tmp = EdiGroup(self._ISA, bytes_list)
                 self._edi_groups.append(tmp)
+
+        # Ack
+        if self._ack_requested:
+            ack = acknowledgement.AckEdiEngine(self)
+            self.ack = ack.get_ack()
 
     def append_group(self, group: EdiGroup):
         self._edi_groups.append(group)
@@ -290,11 +297,14 @@ class EdiHeader:
         out_list = list()
         out_list.append(self._ISA.get_bytes_list())
         for group in self._edi_groups:
+            gs,ge = group.get_gs_ge()
+            out_list.append(gs.get_bytes_list())
             for content in group.get_content():
-                print(content.get_bytes_list())
                 out_list += content.get_bytes_list()
-        out_list += self._IEA.get_bytes_list()
+            out_list.append(ge.get_bytes_list())
+        out_list.append(self._IEA.get_bytes_list())
         return out_list
+
 
 class EdiFile:
     def __init__(self, edi_file : io.BytesIO):
@@ -323,7 +333,9 @@ class EdiFile:
         out_memory = io.BytesIO()
         for section in self.edi_header.get_all_bytes_lists():
             out_line = b''
+            #print(section)
             for i,s in enumerate(section):
+
                 if i+1 < section.__len__() and s:
                     out_line += s + self._separator
                 elif s:

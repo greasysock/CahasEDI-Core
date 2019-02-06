@@ -53,7 +53,14 @@ class GenericProperty:
 
     @property
     def content(self):
-        return self._content
+        out = self._content
+        if self._content and self._content.__len__() < self.min_length:
+            delta = self.min_length - out.__len__()
+            delta_c = [b'' for n in range(delta+1)]
+            out += b' '.join(delta_c)
+        elif not self._content and self.status == StatusValues.Mandatory:
+            out = b' '.join([b'' for n in range(self.min_length+1)])
+        return out
 
     def set_content(self, content):
 

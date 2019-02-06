@@ -9,9 +9,18 @@ Base = declarative_base()
 
 
 class Status(enum.Enum):
+
+    # Messages from Partner
     received = 0
+    acknowledge = 1
+
+    # Messages to Partner
     send = 2
     sent = 3
+
+    # Status for both send/receive
+    acknowledged = 4
+    acknowledged_fail = 5
 
 
 class Partnership(Base):
@@ -28,6 +37,17 @@ class Partnership(Base):
     last_check = Column(DateTime)
 
 
+class Acknowledge(Base):
+
+    __tablename__ = "acknowledge"
+    id = Column(Integer, primary_key=True)
+    message_id = Column(Integer, nullable=False)
+    content = Column(PickleType, nullable=False)
+    status = Column(Enum(Status), nullable=False)
+    direction = Column(Enum(Status), nullable=False)
+
+
+
 class Message(Base):
 
     __tablename__ = "message"
@@ -35,9 +55,13 @@ class Message(Base):
     id = Column(Integer, primary_key=True)
     partner_id = Column(Integer, nullable=False)
     template_type = Column(Integer, nullable=False)
+    interchange_control_number = Column(Integer, nullable=False)
+    group_control_number = Column(Integer)
+    transaction_control_number = Column(Integer, nullable=False)
     content = Column(PickleType, nullable=False)
     date = Column(DateTime, nullable=False)
     status = Column(Enum(Status), nullable=False)
+    direction = Column(Enum(Status), nullable=False)
 
 
 # Checks partnerships in conf file against database, updates database when needed.
