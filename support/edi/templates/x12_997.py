@@ -4,6 +4,7 @@ from .tags import StatusValues, _AK1, _AK2, _AK3, _AK4, _AK5, _AK9
 desc = "Functional Acknowledgment"
 i = 997
 
+
 class Template(generic.Template):
     def __init__(self, start_data=None):
 
@@ -19,7 +20,6 @@ class Template(generic.Template):
         ]
 
         generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
-
 
 
 class TemplateDescription(generic.TemplateDescription):

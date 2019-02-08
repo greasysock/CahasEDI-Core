@@ -12,15 +12,15 @@ class Status(enum.Enum):
 
     # Messages from Partner
     received = 0
-    acknowledge = 1
 
     # Messages to Partner
     send = 2
     sent = 3
 
     # Status for both send/receive
-    acknowledged = 4
-    acknowledged_fail = 5
+    acknowledged_na = 5
+    acknowledged = 6
+    acknowledged_fail = 7
 
 
 class Partnership(Base):
@@ -40,12 +40,12 @@ class Partnership(Base):
 class Acknowledge(Base):
 
     __tablename__ = "acknowledge"
-    id = Column(Integer, primary_key=True)
-    message_id = Column(Integer, nullable=False)
-    content = Column(PickleType, nullable=False)
-    status = Column(Enum(Status), nullable=False)
-    direction = Column(Enum(Status), nullable=False)
 
+    id = Column(Integer, primary_key=True)
+    partner_id = Column(Integer, nullable=False)
+    ack_content = Column(PickleType, nullable=True)
+    status = Column(Enum(Status), nullable=True)
+    interchange_control_number = Column(Integer, nullable=False, unique=True)
 
 
 class Message(Base):
@@ -61,7 +61,6 @@ class Message(Base):
     content = Column(PickleType, nullable=False)
     date = Column(DateTime, nullable=False)
     status = Column(Enum(Status), nullable=False)
-    direction = Column(Enum(Status), nullable=False)
 
 
 # Checks partnerships in conf file against database, updates database when needed.

@@ -14,8 +14,10 @@ class Template:
     def __init__(self, template_id : int, template_description : str, start_data = None, structure = None):
         self._template_id = template_id
         self._template_description = template_description
-        self._ST = _ST()
-        self._SE = _SE()
+        self.ST = _ST()
+        self.SE = _SE()
+        self.GS = None
+        self.ISA = None
         self._template_content = TemplateContentList()
 
         self._structure = structure
@@ -29,15 +31,15 @@ class Template:
         se = None
 
         for section in self._init_template_data:
-            if clean_head(section[0]) == self._ST.tag:
+            if clean_head(section[0]) == self.ST.tag:
                 st = section
-            elif clean_head(section[0]) == self._SE.tag:
+            elif clean_head(section[0]) == self.SE.tag:
                 se = section
 
         if st is not None:
-            self._ST.put_bytes_list(st[1:])
+            self.ST.put_bytes_list(st[1:])
         if se is not None:
-            self._SE.put_bytes_list(se[1:])
+            self.SE.put_bytes_list(se[1:])
 
         if self._structure is not None:
             self._init_process_inner_data()
@@ -99,11 +101,11 @@ class Template:
         return cursor, out_list
 
     def set_isa_gs(self, isa: _ISA, gs: _GS):
-        self._ISA = isa
-        self._GS = gs
+        self.ISA = isa
+        self.GS = gs
 
     def get_isa_gs(self):
-        return (self._ISA, self._GS)
+        return (self.ISA, self.GS)
 
     def process_tag_to_dict(self, tag : GENERIC_TAG, max, min, importance):
         out_dict = dict()
@@ -173,7 +175,7 @@ class Template:
                             tmp_out = [tmp_out]
                         out_list += tmp_out
             if content == self._data:
-                out_list = [self._ST.get_bytes_list()] + out_list + [self._SE.get_bytes_list()]
+                out_list = [self.ST.get_bytes_list()] + out_list + [self.SE.get_bytes_list()]
             return out_list
 
         return False

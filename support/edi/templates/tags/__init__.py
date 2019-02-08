@@ -127,6 +127,10 @@ class GENERIC_TAG:
     def get_tags(self):
         return self._tags
 
+    # Gets idx of item
+    def __getitem__(self, item):
+        return self.get_bytes_list()[item]
+
     # Reverses put_bytes_list and returns formatted correctly for file generation
     def get_bytes_list(self):
         out_list = list()
@@ -146,6 +150,7 @@ class GENERIC_TAG:
 #        print(self.tag)
 #        print(bytes_list)
         for i,value in enumerate(bytes_list):
+            if not value: value = b''
             if type(self._property_array[i]) == GenericProperty:
                 self._property_array[i].set_content(value.strip())
 #                print(self._property_array[i])

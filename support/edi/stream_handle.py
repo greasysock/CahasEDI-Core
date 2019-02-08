@@ -215,8 +215,8 @@ class EdiGroups(list):
 
 class EdiHeader:
     def __init__(self, init_data=None):
-        self._ISA = _ISA()
-        self._IEA = _IEA()
+        self.ISA = _ISA()
+        self.IEA = _IEA()
         self._edi_groups = EdiGroups()
 
         self._ack_requested = False
@@ -234,18 +234,18 @@ class EdiHeader:
         iea = None
 
         for section in self._init_edi_file:
-            if clean_head(section[0]) == self._ISA.tag:
+            if clean_head(section[0]) == self.ISA.tag:
                 isa = section
-            elif clean_head(section[0]) == self._IEA.tag:
+            elif clean_head(section[0]) == self.IEA.tag:
                 iea = section
 
         if isa is not None:
-            self._ISA.put_bytes_list(isa[1:])
+            self.ISA.put_bytes_list(isa[1:])
         if iea is not None:
-            self._IEA.put_bytes_list(iea[1:])
+            self.IEA.put_bytes_list(iea[1:])
 
         # Discover if Ack Requested
-        props = self._ISA.get_property_array()
+        props = self.ISA.get_property_array()
         for prop in props:
             if prop.tag == 13:
                 self._ack_requested = int(prop.content) == 1
@@ -259,12 +259,13 @@ class EdiHeader:
             found_list = discover_all_sections(b'ST', b'SE', self._init_edi_file)
             if found_list.__len__() == 1:
                 self._template = discover_template(found_list[0])
+                self._template.ISA = self.ISA
             # TODO: Raise some error that either no content exists or that content is not contained in group.
             else:
                 pass
         else:
             for bytes_list in found_list:
-                tmp = EdiGroup(self._ISA, bytes_list)
+                tmp = EdiGroup(self.ISA, bytes_list)
                 self._edi_groups.append(tmp)
 
         # Ack
@@ -292,17 +293,17 @@ class EdiHeader:
     def get_all_bytes_lists(self):
         # Method for single template form
         if self._template:
-            return [self._ISA.get_bytes_list()] + self._template.get_bytes_list() + [self._IEA.get_bytes_list()]
+            return [self.ISA.get_bytes_list()] + self._template.get_bytes_list() + [self.IEA.get_bytes_list()]
 
         out_list = list()
-        out_list.append(self._ISA.get_bytes_list())
+        out_list.append(self.ISA.get_bytes_list())
         for group in self._edi_groups:
             gs,ge = group.get_gs_ge()
             out_list.append(gs.get_bytes_list())
             for content in group.get_content():
                 out_list += content.get_bytes_list()
             out_list.append(ge.get_bytes_list())
-        out_list.append(self._IEA.get_bytes_list())
+        out_list.append(self.IEA.get_bytes_list())
         return out_list
 
 

@@ -18,6 +18,7 @@ class Ack:
     def get_ack(self):
         return self._ack
 
+
 def get_cur_dir():
     out_stuff = __file__.split("/")[:-1]
     out_line = ""
@@ -58,6 +59,7 @@ class AckEdiEngine(Ack):
         edi_file = self._to_edi_form(self._to_ack.get_all_bytes_lists())
         edi_bytes = edi_file.read()
         stuff = subprocess.run([self._tool_name], input=edi_bytes, stdout=subprocess.PIPE)
+        if not stuff.stdout: return
         edi_997 = io.BytesIO()
         edi_997.write(stuff.stdout)
         edi_997.seek(0)
