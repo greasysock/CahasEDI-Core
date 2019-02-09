@@ -32,9 +32,26 @@ class Partnership(Base):
     partner_logo = Column(LargeBinary)
     interchange_id = Column(String(15), nullable=False, unique=True)
     interchange_qualifier = Column(String(2), nullable=False)
+
+    interchange_counter = Column(Integer)
+    group_counter = Column(Integer)
+    set_counter = Column(Integer)
+
     watch_dir = Column(String(250), nullable=False, unique=True)
     send_dir = Column(String(250), nullable=False, unique=True)
     last_check = Column(DateTime)
+
+    def get_interchange_counter(self):
+        self.interchange_counter += 1
+        return self.interchange_counter
+
+    def get_group_counter(self):
+        self.group_counter += 1
+        return self.group_counter
+
+    def get_set_counter(self):
+        self.set_counter += 1
+        return self.set_counter
 
 
 class Acknowledge(Base):
@@ -45,7 +62,7 @@ class Acknowledge(Base):
     partner_id = Column(Integer, nullable=False)
     ack_content = Column(PickleType, nullable=True)
     status = Column(Enum(Status), nullable=True)
-    interchange_control_number = Column(Integer, nullable=False, unique=True)
+    interchange_control_number = Column(Integer, nullable=False)
 
 
 class Message(Base):
@@ -58,6 +75,7 @@ class Message(Base):
     interchange_control_number = Column(Integer, nullable=False)
     group_control_number = Column(Integer)
     transaction_control_number = Column(Integer, nullable=False)
+    acknowledge_id = Column(Integer)
     content = Column(PickleType, nullable=False)
     date = Column(DateTime, nullable=False)
     status = Column(Enum(Status), nullable=False)
