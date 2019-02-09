@@ -56,7 +56,6 @@ def partner_loop(partner:Partnership):
             tmp_message.group_control_number = group_number
         set_number = int(content.ST[2])
 
-
         tmp_message.date = datetime.datetime.now()
         tmp_message.content = content.get_bytes_list()
         tmp_message.partner_id = partner.id

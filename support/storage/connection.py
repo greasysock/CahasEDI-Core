@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from .. import config
 from sqlalchemy.orm import sessionmaker
-import enum
+import enum, datetime
 
 Base = declarative_base()
 
@@ -40,6 +40,9 @@ class Partnership(Base):
     watch_dir = Column(String(250), nullable=False, unique=True)
     send_dir = Column(String(250), nullable=False, unique=True)
     last_check = Column(DateTime)
+
+    def update_timestamp(self):
+        self.last_check = datetime.datetime.now()
 
     def get_interchange_counter(self):
         self.interchange_counter += 1
