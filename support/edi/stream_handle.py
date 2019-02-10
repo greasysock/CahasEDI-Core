@@ -2,7 +2,7 @@ from .templates import generic,template_operators, x12_997, x12_860, x12_856, x1
 from .templates.tags import _ISA, _IEA, _GS, _GE
 from . import exceptions
 import io, datetime
-from . import acknowledgement
+from . import acknowledgement, group_identifiers
 # Class for opening and assigning correct edi template to incoming and outgoing edi files for decoding/encoding on-the-fly
 
 
@@ -51,6 +51,9 @@ class PartnershipData:
         self._id = my_id
         self._partner_qualifier = partner_qualifier
         self._partner_id = partner_id
+        self._interchange_counter = 0
+        self._group_counter = 0
+        self._set_counter = 0
 
     @property
     def id_qualifier(self):
@@ -64,6 +67,36 @@ class PartnershipData:
     @property
     def partner_id(self):
         return self._partner_id
+
+    def set_interchange_counter_method(self, method: classmethod):
+        self._interchange_counter = method
+    @property
+    def interchange_counter(self):
+        if type(self._interchange_counter) == int:
+            self._interchange_counter += 1
+            return self._interchange_counter
+        elif type(self._interchange_counter) == classmethod:
+            return self._interchange_counter()
+
+    def set_group_counter_method(self, method: classmethod):
+        self._group_counter = method
+    @property
+    def group_counter(self):
+        if type(self._group_counter) == int:
+            self._group_counter += 1
+            return self._group_counter
+        elif type(self._group_counter) == classmethod:
+            return self._group_counter()
+
+    def set_set_counter_method(self, method: classmethod):
+        self._set_counter = method
+    @property
+    def set_counter(self):
+        if type(self._set_counter) == int:
+            self._set_counter += 1
+            return self._set_counter
+        elif type(self._set_counter) == classmethod:
+            return self._set_counter()
 
 
 class InterchangeTransaction:
@@ -79,6 +112,9 @@ class InterchangeTransaction:
         self._sec_info_qualifier = "  "
         self._sec_info = "          "
         self._ctr_number = ctr_number
+        self._ISA = self.get_isa()
+        self.edi_header = EdiHeader()
+        self.edi_header.ISA = self._ISA
 
     def _get_time_big(self):
         time = datetime.datetime.now()
@@ -94,6 +130,7 @@ class InterchangeTransaction:
             return "1"
         else:
             return "0"
+
     # build ISA
     def get_bytes_list_isa(self):
         return [
@@ -116,7 +153,6 @@ class InterchangeTransaction:
         ]
 
     def get_isa(self):
-
         isa = _ISA()
         isa.put_bytes_list(self.get_bytes_list_isa())
         return isa
@@ -163,19 +199,25 @@ def discover_template(st_se):
     return out
 
 
-class EdiGroup:
-    def __init__(self,isa:_ISA ,init_data=None):
-        self._GS = _GS()
-        self._GE = _GE()
+class EdiGroup(TemplateGroup):
+    def __init__(self,isa:_ISA ,init_data=None, group_info=group_identifiers.Invoice()):
+        TemplateGroup.__init__(self)
+        self._group_info = group_info
+        self._GS = None
+        self._GE = None
         self._ISA = isa
 
-        self._template_group = TemplateGroup()
+        #self._template_group = TemplateGroup()
         if init_data is not None:
             self._init_group_data = init_data
             self._init_process()
 
     def _init_process(self):
         # Discover gs/ge
+
+        self._GS = _GS()
+        self._GE = _GE()
+
         gs = None
         ge = None
 
@@ -199,10 +241,10 @@ class EdiGroup:
                     temp = template.get_template()
                     out = temp(section)
                     out.set_isa_gs(self._ISA, self._GS)
-                    self._template_group.append(out)
+                    self.append(out)
 
     def get_content(self):
-        return self._template_group
+        return self
 
     def get_gs_ge(self):
         return self._GS, self._GE
@@ -213,11 +255,12 @@ class EdiGroups(list):
         super().append(edi_group)
 
 
-class EdiHeader:
+class EdiHeader(EdiGroups):
     def __init__(self, init_data=None):
-        self.ISA = _ISA()
-        self.IEA = _IEA()
-        self._edi_groups = EdiGroups()
+        EdiGroups.__init__(self)
+        self.ISA = None
+        self.IEA = None
+        #self._edi_groups = EdiGroups()
 
         self._ack_requested = False
         self.ack = None
@@ -230,6 +273,10 @@ class EdiHeader:
 
     def _init_process(self):
         # Discover isa/iea
+
+        self.ISA = _ISA()
+        self.IEA = _IEA()
+
         isa = None
         iea = None
 
@@ -266,7 +313,7 @@ class EdiHeader:
         else:
             for bytes_list in found_list:
                 tmp = EdiGroup(self.ISA, bytes_list)
-                self._edi_groups.append(tmp)
+                self.append(tmp)
 
         # Ack
         if self._ack_requested:
@@ -274,9 +321,12 @@ class EdiHeader:
             self.ack = ack.get_ack()
 
     def append_group(self, group: EdiGroup):
-        self._edi_groups.append(group)
+        self.append(group)
 
+    # Appends group to appropriate group, creates new group in no appropriate group exists
     def append_template(self, template: generic.Template):
+        print(template.group_info.identifier_code)
+
         self._template = template
 
     # Returns all content in EDI file
@@ -285,7 +335,7 @@ class EdiHeader:
         if self._template:
             content.append(self._template)
             return content
-        for group in self._edi_groups:
+        for group in self:
             content += group.get_content()
         return content
 
@@ -297,7 +347,7 @@ class EdiHeader:
 
         out_list = list()
         out_list.append(self.ISA.get_bytes_list())
-        for group in self._edi_groups:
+        for group in self:
             gs,ge = group.get_gs_ge()
             out_list.append(gs.get_bytes_list())
             for content in group.get_content():

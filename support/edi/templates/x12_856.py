@@ -1,5 +1,6 @@
 from . import generic
 from .tags import _BSN, _HL, _TD1, _TD5, _REF, _DTM, _N1, _N3, _N4, _PRF, _MAN, _LIN, _SN1, _PID, _CTT, StatusValues
+from .. import group_identifiers
 
 desc = "Ship Notice/Manifest"
 i = 856
@@ -34,7 +35,7 @@ class Template(generic.Template):
             (_CTT, StatusValues.Optional, 1, 0)
             ]
 
-        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
+        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure, group_info=group_identifiers.ShipNotice)
 
 
 class TemplateDescription(generic.TemplateDescription):

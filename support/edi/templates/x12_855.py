@@ -1,5 +1,6 @@
 from . import generic
 from .tags import _BAK, _CUR, _REF, _CSH, _PO1, _PID, _ACK, _CTT, StatusValues
+from .. import group_identifiers
 
 desc = "Purchase Order Acknowledgment"
 i = 855
@@ -22,7 +23,7 @@ class Template(generic.Template):
                 (_CTT, StatusValues.Optional, 1, 1)]
         ]
 
-        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
+        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure, group_info=group_identifiers.PurchaseOrderAcknowledgement)
 
 
 

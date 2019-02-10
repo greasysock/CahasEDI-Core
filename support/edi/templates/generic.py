@@ -1,6 +1,7 @@
 import io
 from .tags import _ST, _SE, _ISA, _GS, GENERIC_TAG, EmptyProperty, GenericProperty
 from .template_operators import template_list, discover_all_sections, clean_head
+from .. import group_identifiers
 
 # Generic template class operates as reader, writer, and validating class for all incoming and outdoing edi files.
 
@@ -11,13 +12,16 @@ class TemplateContentList(list):
 
 
 class Template:
-    def __init__(self, template_id : int, template_description : str, start_data = None, structure = None):
+    def __init__(self, template_id : int, template_description : str, start_data = None, structure = None, group_info = None):
         self._template_id = template_id
         self._template_description = template_description
         self.ST = _ST()
         self.SE = _SE()
         self.GS = None
         self.ISA = None
+        self.group_info = group_identifiers.Invoice()
+        if group_info:
+            self.group_info = group_info()
         self._template_content = TemplateContentList()
 
         self._structure = structure

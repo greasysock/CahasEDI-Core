@@ -1,6 +1,6 @@
 from . import generic
 from .tags import _BEG, _REF, _REF, _FOB, _CSH, _ITD, _DTM, _PWK, _TD5, _TD4, _N1, _N3, _N4, _PER, _PO1, _CTP, _PID, _CTT, StatusValues
-
+from .. import group_identifiers
 
 desc = "Purchase Order"
 i = 850
@@ -33,7 +33,7 @@ class Template(generic.Template):
              (_CTT, StatusValues.Mandatory, 1, 1)]
         ]
 
-        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
+        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure, group_info=group_identifiers.PurchaseOrder)
 
 
 

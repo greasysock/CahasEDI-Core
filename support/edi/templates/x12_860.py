@@ -1,5 +1,6 @@
 from . import generic
 from .tags import _BCH, _REF, _PER, _DTM, _POC, _QTY, StatusValues
+from .. import group_identifiers
 
 desc = "Purchase Order Change Request - Buyer Initiated"
 i = 860
@@ -18,7 +19,7 @@ class Template(generic.Template):
                     (_QTY, StatusValues.Mandatory, 1, 2)]]
         ]
 
-        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
+        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure, group_info=group_identifiers.PurchaseOrderChange)
 
 
 class TemplateDescription(generic.TemplateDescription):

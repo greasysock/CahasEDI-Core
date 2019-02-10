@@ -3,6 +3,7 @@
 
 from . import generic, template_operators
 from .tags import _BIG, _REF, _N1, _N3, _N4, _ITD, _DTM, _FOB, _IT1, _PID, _SAC, _TXI, _TDS, _CAD, _AMT, _CTT, StatusValues
+from .. import group_identifiers
 
 desc = "Invoice"
 i = 810
@@ -39,7 +40,7 @@ class Template(generic.Template):
             (_CTT, StatusValues.Optional, 1, 0)
         ]
 
-        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
+        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure, group_info=group_identifiers.Invoice)
 """
     def _init_process(self):
         super()._init_process()

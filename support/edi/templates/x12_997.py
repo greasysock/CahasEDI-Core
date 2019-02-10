@@ -1,5 +1,6 @@
 from . import generic
 from .tags import StatusValues, _AK1, _AK2, _AK3, _AK4, _AK5, _AK9
+from .. import group_identifiers
 
 desc = "Functional Acknowledgment"
 i = 997
@@ -19,7 +20,7 @@ class Template(generic.Template):
             (_AK9, StatusValues.Mandatory, 1, 0)
         ]
 
-        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure)
+        generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure, group_info=group_identifiers.FunctionalAcknowledgement)
 
 
 class TemplateDescription(generic.TemplateDescription):
