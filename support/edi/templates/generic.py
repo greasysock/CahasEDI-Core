@@ -2,7 +2,6 @@ import io
 from .tags import _ST, _SE, _ISA, _GS, GENERIC_TAG, EmptyProperty, GenericProperty
 from .template_operators import template_list, discover_all_sections, clean_head
 from .. import group_identifiers
-
 # Generic template class operates as reader, writer, and validating class for all incoming and outdoing edi files.
 
 
@@ -19,6 +18,7 @@ class Template:
         self.SE = _SE()
         self.GS = None
         self.ISA = None
+        self._partnership_data = None
         self.group_info = group_identifiers.Invoice()
         if group_info:
             self.group_info = group_info()
@@ -42,9 +42,17 @@ class Template:
 
         if st is not None:
             self.ST.put_bytes_list(st[1:])
+        else:
+            # If no ST/SE exists, fill with empty values to be filled later.
+            st = [self.ST.tag, b'', b'']
+            self._init_template_data = [st] + self._init_template_data
+            self.ST.put_bytes_list(st[1:])
         if se is not None:
             self.SE.put_bytes_list(se[1:])
-
+        else:
+            se = [self.SE.tag, b'', b'']
+            self._init_template_data = self._init_template_data + [se]
+            self.SE.put_bytes_list(se[1:])
         if self._structure is not None:
             self._init_process_inner_data()
 
@@ -52,8 +60,6 @@ class Template:
         cursor = 1
         out_list = list()
         for structure in self._structure:
-
-
             cursor, tmp_list = self._unpack_data(structure, cursor)
             if tmp_list:
                 if tmp_list.__len__() > 1:
@@ -125,6 +131,7 @@ class Template:
 
                 prop_dict = dict()
                 prop_dict['name'] = prop.name
+                prop_dict['id'] = prop.tag
                 prop_dict['length'] = dict()
                 prop_dict['length']['max'] = prop.max_length
                 prop_dict['length']['min'] = prop.min_length
@@ -208,6 +215,21 @@ class Template:
                     out_[i] = out_dict
             return out_
         return False
+
+    def get_segment_count(self):
+        return self.get_bytes_list().__len__()
+
+    # Assign a partner and generate ST/SE
+    def put_partnership(self, partnership_data):
+        self._partnership_data = partnership_data
+        control_num = self._partnership_data.set_counter
+        st = [str(self.template_type).encode(), str(control_num).encode()]
+        se = [str(self.get_segment_count()).encode(), str(control_num).encode()]
+
+        self.ST = _ST()
+        self.ST.put_bytes_list(st)
+        self.SE = _SE()
+        self.SE.put_bytes_list(se)
 
     # TODO:
     def put_detailed_structure(self, detailed_structure):

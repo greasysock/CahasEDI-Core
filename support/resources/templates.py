@@ -1,5 +1,7 @@
 import falcon, json
 from support.edi import stream_handle
+from .. import config
+
 
 
 class Templates:

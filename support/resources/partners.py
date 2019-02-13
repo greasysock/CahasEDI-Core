@@ -1,10 +1,12 @@
 from ..storage.connection import Partnership
 import json
+from .. import config
+
 
 
 class Partners:
 
-    def on_get(self, req, resp):
+    def on_get(self, req, resp, conf:config.File):
         out_partners = list()
         partners = self.session.query(Partnership).all()
         for partner in partners:
@@ -19,5 +21,5 @@ class Partners:
 
 class Partner:
 
-    def on_get(self, req, resp, partner_id):
+    def on_get(self, req, resp, partner_id, conf:config.File):
         pass

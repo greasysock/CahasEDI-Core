@@ -34,23 +34,34 @@ def check_watch_dir(watch_dir: str, time):
 def partner_loop(partner:Partnership):
 
     # Adds ack to ack send queue
+    def prepare_ack(ackno: generic.Template):
+        edi_partnership = stream_handle.PartnershipData(conf.id_qualifier, conf.id, partner.interchange_qualifier, partner.interchange_id)
+        edi_partnership.set_interchange_counter_method(partner.get_interchange_counter)
+        edi_partnership.set_group_counter_method(partner.get_group_counter)
+        edi_partnership.set_set_counter_method(partner.get_set_counter)
+        edi_head = stream_handle.EdiHeader(partner_data=edi_partnership)
+        edi_head.append_template(ackno)
+        return edi_head.get_all_bytes_lists()
     def ack_process_handle(message: stream_handle.EdiFile):
         session = Session()
 
         ack_message = Acknowledge()
         ack_message.interchange_control_number = int(message.edi_header.ISA[13])
-        ack_message.ack_content = message.edi_header.ack.edi_header.get_all_bytes_lists()
+        ack_message.ack_content = prepare_ack(message.edi_header.ack)
         ack_message.partner_id = partner.id
         ack_message.status = Status.send
         session.add(ack_message)
         session.commit()
+        msg_id = ack_message.id
         session.close()
+        return msg_id
 
-    def receive_message_handle(content: generic.Template):
+    def receive_message_handle(content: generic.Template, ack_id=None):
         session = Session()
 
         tmp_message = Message()
-
+        if ack_id:
+            tmp_message.acknowledge_id = ack_id
         if content.GS:
             group_number = int(content.GS[6])
             tmp_message.group_control_number = group_number
@@ -76,26 +87,34 @@ def partner_loop(partner:Partnership):
     def receive_handle(message: stream_handle.EdiFile):
         contents = message.edi_header.get_all_content()
         if message.edi_header.ack:
-            ack_process_handle(message)
+            ack_id = ack_process_handle(message)
 
         for content in contents:
             if content.template_type == x12_997.description.identifier_code:
                 receive_ack_handle(content)
             else:
-                receive_message_handle(content)
+                receive_message_handle(content, ack_id = ack_id)
 
     # TODO
     def message_send_handle(message: Message):
         pass
 
     def ack_send_handle(ack: Acknowledge):
-        print(ack.ack_content)
-
         ediheader = stream_handle.EdiHeader(ack.ack_content)
-
-        print(ediheader)
-        print(ack.ack_content)
-        pass
+        edi_file = io.BytesIO()
+        stream = stream_handle.EdiFile(edi_file)
+        stream.edi_header = ediheader
+        edi_file = stream.get_open_file()
+        print(partner.send_dir)
+        filename = datetime.datetime.now().strftime('ACK-%Y%m%d-%H%M.') + str(ediheader.get_all_content()[0].template_type)
+        with open(partner.send_dir+'/'+filename, 'wb') as out_file:
+            out_file.writelines(edi_file.readlines())
+        session = Session()
+        new_ack = session.query(Acknowledge).filter_by(id=ack.id).first()
+        new_ack.status = Status.sent
+        #ack.status = Status.sent
+        session.commit()
+        session.close()
 
     # Check for existing timestamp
     if partner.last_check is None:

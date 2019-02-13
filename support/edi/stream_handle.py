@@ -3,9 +3,9 @@ from .templates.tags import _ISA, _IEA, _GS, _GE
 from . import exceptions
 import io, datetime
 from . import acknowledgement, group_identifiers
-# Class for opening and assigning correct edi template to incoming and outgoing edi files for decoding/encoding on-the-fly
 
-
+# Classes for opening and assigning correct edi template to incoming
+# and outgoing edi files for decoding/encoding on-the-fly
 # TODO: implement feature to detect Terminator/Sub-Element Separator/Repeating Carrot
 
 terminator = b'~'
@@ -75,8 +75,7 @@ class PartnershipData:
         if type(self._interchange_counter) == int:
             self._interchange_counter += 1
             return self._interchange_counter
-        elif type(self._interchange_counter) == classmethod:
-            return self._interchange_counter()
+        return self._interchange_counter()
 
     def set_group_counter_method(self, method: classmethod):
         self._group_counter = method
@@ -85,8 +84,7 @@ class PartnershipData:
         if type(self._group_counter) == int:
             self._group_counter += 1
             return self._group_counter
-        elif type(self._group_counter) == classmethod:
-            return self._group_counter()
+        return self._group_counter()
 
     def set_set_counter_method(self, method: classmethod):
         self._set_counter = method
@@ -95,12 +93,56 @@ class PartnershipData:
         if type(self._set_counter) == int:
             self._set_counter += 1
             return self._set_counter
-        elif type(self._set_counter) == classmethod:
-            return self._set_counter()
+        return self._set_counter()
+
+
+class GroupTransaction:
+    def __init__(self, partnership: PartnershipData, functional_code:bytes, responsible_agency=b'X', version=b'004010'):
+        self._partner = partnership
+        self._functional_id = functional_code
+        self._responsible_agency = responsible_agency
+        self._control = str(self._partner.group_counter).encode()
+        self._version = version
+
+    def _get_time_big(self):
+        time = datetime.datetime.now()
+        return time.strftime("%Y%m%d").encode()
+
+    def _get_time_little(self):
+        time = datetime.datetime.now()
+        return time.strftime("%H%M").encode()
+
+    def get_bytes_list_gs(self):
+        return [
+            self._functional_id,
+            self._partner.id.encode(),
+            self._partner.partner_id.encode(),
+            self._get_time_big(),
+            self._get_time_little(),
+            self._control,
+            self._responsible_agency,
+            self._version
+        ]
+
+    def get_bytes_list_ge(self, amount:int):
+        return [
+            str(amount).encode(),
+            self._control
+        ]
+
+    def get_gs(self):
+        gs = _GS()
+        gs.put_bytes_list(self.get_bytes_list_gs())
+        return gs
+
+    def get_ge(self, amount:int):
+        ge = _GE()
+        ge.put_bytes_list(self.get_bytes_list_ge(amount))
+        return ge
 
 
 class InterchangeTransaction:
-    def __init__(self, partnership: PartnershipData, ctr_number = -1, usage_indicator = "T", interchg_ctr_ver_nmb="00400",interchg_stds = "U",comp_sep = '>'):
+    def __init__(self, partnership: PartnershipData, usage_indicator = "T", interchg_ctr_ver_nmb="00400",interchg_stds = "U",comp_sep = '>'):
         self._partner = partnership
         self._interchg_stds = interchg_stds
         self._comp_sep = comp_sep
@@ -111,7 +153,7 @@ class InterchangeTransaction:
         self._auth_info = "          "
         self._sec_info_qualifier = "  "
         self._sec_info = "          "
-        self._ctr_number = ctr_number
+        self._ctr_number = self._partner.interchange_counter
         self._ISA = self.get_isa()
         self.edi_header = EdiHeader()
         self.edi_header.ISA = self._ISA
@@ -200,17 +242,21 @@ def discover_template(st_se):
 
 
 class EdiGroup(TemplateGroup):
-    def __init__(self,isa:_ISA ,init_data=None, group_info=group_identifiers.Invoice()):
+    def __init__(self,isa:_ISA ,init_data=None, group_info=group_identifiers.Invoice(), partner_data=None):
         TemplateGroup.__init__(self)
-        self._group_info = group_info
+        self.group_info = group_info
         self._GS = None
         self._GE = None
         self._ISA = isa
-
+        self._partner_data = partner_data
+        self._group_transaction = None
         #self._template_group = TemplateGroup()
         if init_data is not None:
             self._init_group_data = init_data
             self._init_process()
+        elif self._partner_data and self.group_info:
+            self._group_transaction = GroupTransaction(self._partner_data, self.group_info.identifier_code)
+            self._GS = self._group_transaction.get_gs()
 
     def _init_process(self):
         # Discover gs/ge
@@ -242,11 +288,17 @@ class EdiGroup(TemplateGroup):
                     out = temp(section)
                     out.set_isa_gs(self._ISA, self._GS)
                     self.append(out)
+    def append(self, template: generic.Template):
+        if self._partner_data:
+            template.put_partnership(self._partner_data)
+        super().append(template)
 
     def get_content(self):
         return self
 
     def get_gs_ge(self):
+        if self._group_transaction:
+            self._GE = self._group_transaction.get_ge(self.__len__())
         return self._GS, self._GE
 
 
@@ -255,9 +307,9 @@ class EdiGroups(list):
         super().append(edi_group)
 
 
-class EdiHeader(EdiGroups):
-    def __init__(self, init_data=None):
-        EdiGroups.__init__(self)
+class EdiHeader(list):
+    def __init__(self, init_data=None, partner_data=None):
+        list.__init__(self)
         self.ISA = None
         self.IEA = None
         #self._edi_groups = EdiGroups()
@@ -267,16 +319,24 @@ class EdiHeader(EdiGroups):
 
         # For transactions with single message
         self._template = None
-        if init_data is not None:
+
+        self._partner_data = partner_data
+
+        # Normal Init from opened edi file
+        if init_data:
             self._init_edi_file = init_data
             self._init_process()
+        elif partner_data:
+            # Init for writing empty edi file, create ISA. IEA will be made at end
+            self._edi_transaction = InterchangeTransaction(self._partner_data)
+            self.ISA = self._edi_transaction.get_isa()
 
     def _init_process(self):
         # Discover isa/iea
 
         self.ISA = _ISA()
         self.IEA = _IEA()
-
+        self._edi_transaction = None
         isa = None
         iea = None
 
@@ -320,14 +380,22 @@ class EdiHeader(EdiGroups):
             ack = acknowledgement.AckEdiEngine(self)
             self.ack = ack.get_ack()
 
-    def append_group(self, group: EdiGroup):
-        self.append(group)
+    '''
+    @param group: EdiGroup expected only
+    '''
+    def append(self, group: EdiGroup):
+        super().append(group)
 
     # Appends group to appropriate group, creates new group in no appropriate group exists
     def append_template(self, template: generic.Template):
-        print(template.group_info.identifier_code)
-
-        self._template = template
+        tar_group = None
+        for group in self:
+            if group.group_info.identifier_code == template.group_info.identifier_code:
+                tar_group = group
+        if not tar_group:
+            tar_group = EdiGroup(self.ISA, group_info=template.group_info, partner_data=self._partner_data)
+            self.append(tar_group)
+        tar_group.append(template)
 
     # Returns all content in EDI file
     def get_all_content(self):
@@ -341,6 +409,9 @@ class EdiHeader(EdiGroups):
 
     # Get all bytes content from all content headers and groups
     def get_all_bytes_lists(self):
+        if self._edi_transaction:
+            self.IEA = self._edi_transaction.get_iea(self.__len__())
+
         # Method for single template form
         if self._template:
             return [self.ISA.get_bytes_list()] + self._template.get_bytes_list() + [self.IEA.get_bytes_list()]
@@ -384,9 +455,7 @@ class EdiFile:
         out_memory = io.BytesIO()
         for section in self.edi_header.get_all_bytes_lists():
             out_line = b''
-            #print(section)
             for i,s in enumerate(section):
-
                 if i+1 < section.__len__() and s:
                     out_line += s + self._separator
                 elif s:

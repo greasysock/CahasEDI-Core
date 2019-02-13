@@ -63,4 +63,8 @@ class AckEdiEngine(Ack):
         edi_997 = io.BytesIO()
         edi_997.write(stuff.stdout)
         edi_997.seek(0)
-        self._ack = stream_handle.EdiFile(edi_997)
+        out_form = stream_handle.EdiFile(edi_997)
+        out_997 = None
+        for temp in out_form.edi_header.get_all_content():
+            out_997 = temp
+        self._ack = out_997

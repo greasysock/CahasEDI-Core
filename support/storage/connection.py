@@ -45,15 +45,24 @@ class Partnership(Base):
         self.last_check = datetime.datetime.now()
 
     def get_interchange_counter(self):
-        self.interchange_counter += 1
+        if self.interchange_counter or self.group_counter == 0:
+            self.interchange_counter += 1
+        else:
+            self.interchange_counter = 0
         return self.interchange_counter
 
     def get_group_counter(self):
-        self.group_counter += 1
+        if self.group_counter or self.group_counter == 0:
+            self.group_counter += 1
+        else:
+            self.group_counter = 0
         return self.group_counter
 
     def get_set_counter(self):
-        self.set_counter += 1
+        if self.set_counter or self.set_counter == 0:
+            self.set_counter += 1
+        else:
+            self.set_counter = 0
         return self.set_counter
 
 

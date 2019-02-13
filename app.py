@@ -31,8 +31,26 @@ class SQLAlchemySessionManager:
             Session.remove()
 
 
+class ConfSessionManager:
+    """
+    Create a scoped session for conf resource
+    """
+
+    def __init__(self, conf: config.File):
+        self.conf = conf
+
+    def process_resource(self, req, resp, resource, params):
+        resource.conf = self.conf
+
+    def process_response(self, req, resp, resource, req_succeeded):
+        if hasattr(resource, 'conf'):
+            resource.conf = None
+
+
+
 app = falcon.API(middleware=[
-    SQLAlchemySessionManager(Session)
+    SQLAlchemySessionManager(Session),
+    ConfSessionManager(conf)
 ])
 
 local_messages = messages.Messages()
