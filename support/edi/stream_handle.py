@@ -135,6 +135,10 @@ class GroupTransaction:
         gs.put_bytes_list(self.get_bytes_list_gs())
         return gs
 
+    @property
+    def control_num(self):
+        return int(self._control)
+
     def get_ge(self, amount:int):
         ge = _GE()
         ge.put_bytes_list(self.get_bytes_list_ge(amount))
@@ -205,6 +209,10 @@ class InterchangeTransaction:
             str(groups).encode(),
             str(self._ctr_number).encode()
         ]
+
+    @property
+    def control_num(self):
+        return self._ctr_number
 
     def get_iea(self, groups : int):
         iea = _IEA()
@@ -291,10 +299,17 @@ class EdiGroup(TemplateGroup):
     def append(self, template: generic.Template):
         if self._partner_data:
             template.put_partnership(self._partner_data)
+        template.set_isa_gs(self._ISA, self._GS)
         super().append(template)
 
     def get_content(self):
         return self
+
+    @property
+    def control_num(self):
+        if self._group_transaction:
+            return self._group_transaction.control_num
+        return int(self._GS[6])
 
     def get_gs_ge(self):
         if self._group_transaction:
@@ -396,6 +411,16 @@ class EdiHeader(list):
             tar_group = EdiGroup(self.ISA, group_info=template.group_info, partner_data=self._partner_data)
             self.append(tar_group)
         tar_group.append(template)
+
+    # Pass template and get tuple of template, group, and set id
+    def get_id_tuple(self, template: generic.Template):
+        tar_group = None
+        for group in self:
+            for content in group.get_content():
+                if id(content) == id(template): tar_group = group
+        return (self._edi_transaction.control_num,
+                tar_group.control_num,
+                template.control_num)
 
     # Returns all content in EDI file
     def get_all_content(self):

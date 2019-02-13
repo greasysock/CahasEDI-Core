@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, Column, ForeignKey, Integer, String, DateT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from .. import config
+from ..edi import stream_handle
 from sqlalchemy.orm import sessionmaker
 import enum, datetime
 
@@ -74,8 +75,42 @@ class Acknowledge(Base):
     partner_id = Column(Integer, nullable=False)
     ack_content = Column(PickleType, nullable=True)
     status = Column(Enum(Status), nullable=True)
-    interchange_control_number = Column(Integer, nullable=False)
+    interchange_id = Column(Integer, nullable=False)
 
+
+# Container for building files later
+class InterchangeContainer(Base):
+
+    __tablename__ = "interchange container"
+
+    id = Column(Integer, primary_key=True)
+    partner_id = Column(Integer, nullable=False)
+    content = Column(PickleType, nullable=False)
+    control_number = Column(Integer, nullable=False)
+
+    def get_iea(self):
+        return [
+            b'IEA',
+            b'1',
+            str(self.control_number).encode()
+        ]
+
+class GroupContainer(Base):
+
+    __tablename__ = "group container"
+
+    id = Column(Integer, primary_key=True)
+    partner_id = Column(Integer, nullable=False)
+    interchange_id = Column(Integer, nullable=False)
+    content = Column(PickleType, nullable=False)
+    control_number = Column(Integer, nullable=False)
+
+    def get_ge(self):
+        return [
+            b'GE',
+            b'1',
+            str(self.control_number).encode()
+        ]
 
 class Message(Base):
 
@@ -83,14 +118,36 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True)
     partner_id = Column(Integer, nullable=False)
+    interchange_id = Column(Integer, nullable=False)
+    group_id = Column(Integer)
     template_type = Column(Integer, nullable=False)
-    interchange_control_number = Column(Integer, nullable=False)
-    group_control_number = Column(Integer)
-    transaction_control_number = Column(Integer, nullable=False)
-    acknowledge_id = Column(Integer)
+    control_number = Column(Integer, nullable=False)
     content = Column(PickleType, nullable=False)
     date = Column(DateTime, nullable=False)
     status = Column(Enum(Status), nullable=False)
+
+    def get_group_container(self, session):
+        if self.group_id:
+            return session.query(GroupContainer).filter_by(id=self.group_id).first() # type: GroupContainer
+
+    def get_interchange_container(self, session):
+        return session.query(InterchangeContainer).filter_by(id=self.interchange_id).first() # type: InterchangeContainer
+
+    # Builds template file for message
+    def get_template(self):
+        target_template = None
+        for template in stream_handle.template_operators.template_list:
+            if template.identifier_code == self.template_type:
+                target_template = template
+        return target_template.get_template()(self.content)
+
+    # Builds entire message including group and header into EdiHeader
+    def get_full_file(self, session):
+        interchange = self.get_interchange_container(session)  # type: InterchangeContainer
+        group = self.get_group_container(session) # type: GroupContainer
+
+        edi_array = [interchange.content] + [group.content] + self.content + [group.get_ge()] + [interchange.get_iea()]
+        return stream_handle.EdiHeader(edi_array)
 
 
 # Checks partnerships in conf file against database, updates database when needed.

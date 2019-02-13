@@ -6,7 +6,7 @@ from .. import config
 
 class Partners:
 
-    def on_get(self, req, resp, conf:config.File):
+    def on_get(self, req, resp):
         out_partners = list()
         partners = self.session.query(Partnership).all()
         for partner in partners:
@@ -21,5 +21,5 @@ class Partners:
 
 class Partner:
 
-    def on_get(self, req, resp, partner_id, conf:config.File):
+    def on_get(self, req, resp, partner_id):
         pass

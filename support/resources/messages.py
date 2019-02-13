@@ -1,7 +1,8 @@
 # Classes for receiving and sending messages
 import falcon, json
 from ..storage import connection
-import time, io
+
+import time, io, datetime
 from support.edi import stream_handle
 from .. import config
 
@@ -32,7 +33,10 @@ class Messages:
             tmp_dict = dict()
             tmp_dict['message id'] = message.id
             tmp_dict['partner id'] = message.partner_id
-            tmp_dict['document type'] = message.template_type
+            tmp_dict['template id'] = message.template_type
+            tmp_dict['interchange control number'] = message.get_interchange_container(self.session).control_number
+            tmp_dict['group control number'] = message.get_group_container(self.session).control_number
+            tmp_dict['transaction control number'] = message.control_number
             tmp_dict['date'] = unix_time
             tmp_dict['status'] = message.status.value
             out_list.append(tmp_dict)
@@ -46,6 +50,7 @@ class Messages:
         #self.conf = config.File()
 
         # First version of receiving edi files. Only one file at a time is currently supported
+        # TODO: Add integrity checking
         def ver_zero():
             target_temp = None
 
@@ -53,7 +58,6 @@ class Messages:
             for template in stream_handle.template_operators.template_list:
                 if req.media['template id'] == template.identifier_code:
                     target_temp = template
-            print(target_temp)
             partner = self.session.query(connection.Partnership).filter_by(id=req.media['partner id']).first()
             #partner = connection.Partnership()
 
@@ -71,13 +75,41 @@ class Messages:
             # Build EdiHeader object and append template
             edi_obj = stream_handle.EdiHeader(partner_data=partnership)
             edi_obj.append_template(template)
-            tmp_mem = io.BytesIO()
-            edi_file = stream_handle.EdiFile(tmp_mem)
-            edi_file.edi_header = edi_obj
-            out_template = edi_file.get_open_file()
-            lines = out_template.readlines()
-            print(lines)
+            id_tuple = edi_obj.get_id_tuple(template)
 
+
+            # Create New Message and Container
+            interchange_container = connection.InterchangeContainer()
+            interchange_container.partner_id = int(req.media['partner id'])
+            interchange_container.content = edi_obj.ISA.get_bytes_list()
+            interchange_container.control_number = id_tuple[0]
+
+            self.session.add(interchange_container)
+            self.session.commit()
+
+            if template.GS:
+                group_container = connection.GroupContainer()
+                group_container.partner_id = int(req.media['partner id'])
+                group_container.interchange_id = interchange_container.id
+                group_container.content = template.GS.get_bytes_list()
+                group_container.control_number = id_tuple[1]
+
+                self.session.add(group_container)
+                self.session.commit()
+
+            new_message = connection.Message()
+            new_message.partner_id = int(req.media['partner id'])
+            new_message.template_type = int(template.template_type)
+            new_message.interchange_id = interchange_container.id
+            if template.GS:
+                new_message.group_id = group_container.id
+            new_message.content = template.get_bytes_list()
+            new_message.date = datetime.datetime.now()
+            new_message.control_number = id_tuple[2]
+            new_message.status = connection.Status.send
+
+            self.session.add(new_message)
+            self.session.commit()
 
         if req.media['content version'] == 0:
             ver_zero()
@@ -87,15 +119,21 @@ class Message:
 
     def on_get(self, req, resp, message_id):
         message = self.session.query(connection.Message).filter_by(id=message_id).first()
+        interchange_container = message.get_interchange_container(self.session)
+        group_container = message.get_group_container(self.session)
+        template = message.get_template()
 
         unix_time = time.mktime(message.date.timetuple())
         out_dict = dict()
         out_dict['message id'] = message.id
         out_dict['partner id'] = message.partner_id
         out_dict['template id'] = message.template_type
+        out_dict['interchange control number'] = interchange_container.control_number
+        out_dict['group control number'] = group_container.control_number
+        out_dict['transaction control number'] = message.control_number
         out_dict['date'] = unix_time
         out_dict['status'] = message.status.value
-        out_dict['content'] = message.content
+        out_dict['content'] = template.get_detailed_content()
 
         resp.body = json.dumps(out_dict, indent=2)
 

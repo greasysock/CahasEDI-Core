@@ -18,6 +18,7 @@ class Template:
         self.SE = _SE()
         self.GS = None
         self.ISA = None
+        self._control_num = None
         self._partnership_data = None
         self.group_info = group_identifiers.Invoice()
         if group_info:
@@ -42,6 +43,7 @@ class Template:
 
         if st is not None:
             self.ST.put_bytes_list(st[1:])
+            self._control_num = int(self.ST[2])
         else:
             # If no ST/SE exists, fill with empty values to be filled later.
             st = [self.ST.tag, b'', b'']
@@ -222,9 +224,9 @@ class Template:
     # Assign a partner and generate ST/SE
     def put_partnership(self, partnership_data):
         self._partnership_data = partnership_data
-        control_num = self._partnership_data.set_counter
-        st = [str(self.template_type).encode(), str(control_num).encode()]
-        se = [str(self.get_segment_count()).encode(), str(control_num).encode()]
+        self._control_num = self._partnership_data.set_counter
+        st = [str(self.template_type).encode(), str(self._control_num).encode()]
+        se = [str(self.get_segment_count()).encode(), str(self._control_num).encode()]
 
         self.ST = _ST()
         self.ST.put_bytes_list(st)
@@ -234,6 +236,10 @@ class Template:
     # TODO:
     def put_detailed_structure(self, detailed_structure):
         pass
+
+    @property
+    def control_num(self):
+        return self._control_num
 
     @property
     def template_type(self):
