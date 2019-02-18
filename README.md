@@ -4,7 +4,7 @@ Server/Client to AS2 messaging server for managing EDI partnerships and interpre
 
 #### Disclaimer
 
-CahasEDI-Core is in very early stages of development and is not ready for use in system critical enviornments.
+CahasEDI-Core is in very early stages of development and is not ready/intended for use in system critical environments at the moment.
 
 #### Framework
 
