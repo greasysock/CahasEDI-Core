@@ -52,6 +52,12 @@ class GenericProperty:
         return self._tag
 
     @property
+    def empty(self):
+        if self._content == b'' or not self._content:
+            return True
+        return False
+
+    @property
     def content(self):
         out = self._content
         if self._content and self._content.__len__() < self.min_length:
@@ -60,6 +66,8 @@ class GenericProperty:
             out += b' '.join(delta_c)
         elif not self._content and self.status == StatusValues.Mandatory:
             out = b' '.join([b'' for n in range(self.min_length+1)])
+        elif not self._content:
+            out = b''
         return out
 
     def set_content(self, content):
@@ -68,7 +76,7 @@ class GenericProperty:
             self._content = content
 
     def __str__(self):
-        return " [ {}: \"{}\" ] ".format(self._name, self._content.decode("utf-8"))
+        return " [ {}: \"{}\" ] ".format(self._name, self.content.decode("utf-8"))
 
 
 class EmptyProperty:
@@ -135,11 +143,18 @@ class GENERIC_TAG:
     def get_bytes_list(self):
         out_list = list()
         out_list.append(self.tag)
-        for property in self._property_array:
+        tmp_properties = self._property_array.copy()
+        for property in self._property_array.__reversed__():
+            if (type(property) == GenericProperty and property.empty and property.status != StatusValues.Mandatory) or (type(property) == EmptyProperty):
+                tmp_properties.remove(property)
+            else:
+                break
+        for property in tmp_properties:
             if type(property) == GenericProperty:
                 out_list.append(property.content)
             else:
                 out_list.append(b'')
+
         return out_list
 
     def get_property_array(self):

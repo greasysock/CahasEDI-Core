@@ -187,6 +187,32 @@ class Template:
                         if type(tmp_out[0]) != list:
                             tmp_out = [tmp_out]
                         out_list += tmp_out
+                    print(section)
+            if content == self._data:
+                out_list = [self.ST.get_bytes_list()] + out_list + [self.SE.get_bytes_list()]
+            return out_list
+
+        return False
+
+    # Returns list of list of bytes of content. Requires recursion, based off get_detailed_structure
+    def get_bytes_list_old(self, input_content=None):
+        if input_content:
+            content = input_content
+        else:
+            content = self._data
+        out_list = list()
+        if content:
+            if type(content) != list:
+                return content.get_bytes_list()
+            for section in content:
+                if type(section) != list:
+                    out_list.append(self.get_bytes_list(input_content=section))
+                elif type(section) == list:
+                    for inner_section in section:
+                        tmp_out = self.get_bytes_list(inner_section)
+                        if type(tmp_out[0]) != list:
+                            tmp_out = [tmp_out]
+                        out_list += tmp_out
             if content == self._data:
                 out_list = [self.ST.get_bytes_list()] + out_list + [self.SE.get_bytes_list()]
             return out_list
