@@ -25,7 +25,11 @@ class Template:
                 t = t()
                 details = t.get_detailed_structure()
                 if details:
-                    resp.body = json.dumps(details, indent=2)
+                    out = dict()
+                    out['id'] = template.identifier_code
+                    out['description'] = template.description
+                    out['content'] = details
+                    resp.body = json.dumps(out, indent=2)
                 else:
                     resp.status = falcon.HTTP_400
                 break

@@ -25,7 +25,7 @@ class Messages:
 
     # Get method returns all message descriptions
     def on_get(self, req, resp):
-        messages = self.session.query(connection.Message).all()
+        messages = self.session.query(connection.Message).order_by(connection.Message.date.desc()).all()
         out_list = list()
 
         for message in messages:
