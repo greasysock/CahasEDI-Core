@@ -127,7 +127,7 @@ class Template:
         out_dict['importance'] = importance.value.decode()
         out_dict['description'] = tag.content
         out_dict['tag'] = tag.tag.decode()
-        out_dict['properties'] = dict()
+        out_dict['properties'] = list()
         for k, prop in enumerate(tag.get_property_array()):
             if type(prop) == GenericProperty:
 
@@ -142,10 +142,10 @@ class Template:
                     prop_dict['content'] = prop.content.decode()
                 except AttributeError:
                     prop_dict['content'] = prop.content
-                out_dict['properties'][k] = prop_dict
+                out_dict['properties'].append(prop_dict)
 
             elif type(prop) == EmptyProperty:
-                out_dict['properties'][k] = None
+                out_dict['properties'].append(None)
         return out_dict
 
     def get_detailed_content(self, input_content=None):
@@ -153,7 +153,28 @@ class Template:
             content = input_content
         else:
             content = self._data
+        out_list = list()
+        if content:
+            if type(content) != list:
+                return self.process_tag_to_dict(content, content.max, content.min, content.status)
+            for i, cont in enumerate(content):
+                if type(cont) != list:
+                    out_list.append(self.get_detailed_content(input_content=cont))
+                elif type(cont) == list:
+                    tmp_list = list()
+                    for j,inner_cont in enumerate(cont):
+                        tmp_list.append(self.get_detailed_content(input_content=inner_cont))
+                    out_list.append(tmp_list)
+            return out_list
+        return False
+
+    def get_detailed_content_old(self, input_content=None):
+        if input_content:
+            content = input_content
+        else:
+            content = self._data
         out_dict = dict()
+        out_list = list()
         if content:
             if type(content) != list:
                 return self.process_tag_to_dict(content, content.max, content.min, content.status)
@@ -194,39 +215,12 @@ class Template:
 
         return False
 
-    # Returns list of list of bytes of content. Requires recursion, based off get_detailed_structure
-    def get_bytes_list_old(self, input_content=None):
-        if input_content:
-            content = input_content
-        else:
-            content = self._data
-        out_list = list()
-        if content:
-            if type(content) != list:
-                return content.get_bytes_list()
-            for section in content:
-                if type(section) != list:
-                    out_list.append(self.get_bytes_list(input_content=section))
-                elif type(section) == list:
-                    for inner_section in section:
-                        tmp_out = self.get_bytes_list(inner_section)
-                        if type(tmp_out[0]) != list:
-                            tmp_out = [tmp_out]
-                        out_list += tmp_out
-            if content == self._data:
-                out_list = [self.ST.get_bytes_list()] + out_list + [self.SE.get_bytes_list()]
-            return out_list
-
-        return False
-
     # Get detailed structure
     def get_detailed_structure(self, input_structure=None):
-
+        out_ = list()
         if input_structure:
-            out_ = dict()
             struct = input_structure
         else:
-            out_ = dict()
             struct = self._structure
         if struct:
             if type(struct) == tuple:
@@ -235,12 +229,12 @@ class Template:
 
             for i,structure in enumerate(struct):
                 if type(structure) == tuple:
-                    out_[i] = self.get_detailed_structure(input_structure=structure)
+                    out_.append(self.get_detailed_structure(input_structure=structure))
                 elif type(structure) == list:
-                    out_dict = dict()
+                    out_list = list()
                     for j,inner_structure in enumerate(structure):
-                        out_dict[j] = self.get_detailed_structure(input_structure=inner_structure)
-                    out_[i] = out_dict
+                        out_list.append(self.get_detailed_structure(input_structure=inner_structure))
+                    out_.append(out_list)
             return out_
         return False
 
