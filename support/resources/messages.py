@@ -120,7 +120,8 @@ class Message:
     def on_get(self, req, resp, message_id):
         message = self.session.query(connection.Message).filter_by(id=message_id).first()
         interchange_container = message.get_interchange_container(self.session)
-        group_container = message.get_group_container(self.session)
+        if message.group_id:
+            group_container = message.get_group_container(self.session)
         template = message.get_template()
 
         unix_time = time.mktime(message.date.timetuple())
@@ -129,7 +130,8 @@ class Message:
         out_dict['partner id'] = message.partner_id
         out_dict['template id'] = message.template_type
         out_dict['interchange control number'] = interchange_container.control_number
-        out_dict['group control number'] = group_container.control_number
+        if message.group_id:
+            out_dict['group control number'] = group_container.control_number
         out_dict['transaction control number'] = message.control_number
         out_dict['date'] = unix_time
         out_dict['status'] = message.status.value
