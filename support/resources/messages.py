@@ -35,7 +35,8 @@ class Messages:
             tmp_dict['partner id'] = message.partner_id
             tmp_dict['template id'] = message.template_type
             tmp_dict['interchange control number'] = message.get_interchange_container(self.session).control_number
-            tmp_dict['group control number'] = message.get_group_container(self.session).control_number
+            if message.group_id:
+                tmp_dict['group control number'] = message.get_group_container(self.session).control_number
             tmp_dict['transaction control number'] = message.control_number
             tmp_dict['date'] = unix_time
             tmp_dict['status'] = message.status.value
