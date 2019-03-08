@@ -179,7 +179,7 @@ def check_partner_health(engine, conf: config.File):
 
 # Create db connection and initialize tables. TODO: Change engine depending on type
 def connect(conf : config.File, type):
-    engine = create_engine('postgresql://{}:{}@localhost:5432/{}'.format(conf.db_login, conf.db_password, conf.db_name))
+    engine = create_engine('postgresql://{}:{}@localhost:5432/{}'.format(conf.db_login, conf.db_password, conf.db_name), echo=True)
     Base.metadata.create_all(engine)
     check_partner_health(engine, conf)
     return engine

@@ -2,7 +2,7 @@
 import falcon, json
 from ..storage import connection
 
-import time, io, datetime
+import time, io, datetime, math
 from support.edi import stream_handle
 from .. import config
 
@@ -29,6 +29,8 @@ def message_to_dict(message: connection.Message, individual=False):
     message_dict['interchange control number'] = message.interchange.control_number
     if message.group_id:
         message_dict['group control number'] = message.group.control_number
+    else:
+        message_dict['group control number'] = None
     if message.interchange.acknowledge:
         message_dict['acknowledge status'] = message.interchange.acknowledge.status.value
     else:
@@ -41,18 +43,39 @@ def message_to_dict(message: connection.Message, individual=False):
         message_dict['content'] = template.get_detailed_content()
     return message_dict
 
+# Pulls back correct page
+def page(session, page:int, page_length=2):
+    start_index = (page - 1)*page_length
+    return session.query(connection.Message).order_by(connection.Message.date.desc()).limit(page_length).offset(start_index)
+
+def pages(session, page_length=2):
+    return math.ceil(float(session.query(connection.Message).count())/float(page_length))
+
 class Messages:
 
     # Get method returns all message descriptions
     def on_get(self, req, resp):
-        messages = self.session.query(connection.Message).order_by(connection.Message.date.desc()).all()
+        cur_page = 1
+        print('*'*100)
+        print(req.params)
+        print('*'*100)
+        # Check if page param was given, otherwise return first page.
+        if req.params.get('page'):
+            print('*'*100)
+            print(int(req.params['page']))
+            print('*'*100)
+            messages = page(self.session, int(req.params['page']))
+        else:
+            messages = page(self.session, 1)
         out_list = list()
 
         for message in messages:
             tmp_dict = message_to_dict(message)
             out_list.append(tmp_dict)
-
+        resp
         resp.body = json.dumps(out_list, indent=2)
+        resp.set_header('X-Pages', pages(self.session))
+        resp.set_header('X-Page', cur_page)
 
     # Submit EDI file
 
