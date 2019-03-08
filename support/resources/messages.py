@@ -56,15 +56,10 @@ class Messages:
     # Get method returns all message descriptions
     def on_get(self, req, resp):
         cur_page = 1
-        print('*'*100)
-        print(req.params)
-        print('*'*100)
         # Check if page param was given, otherwise return first page.
         if req.params.get('page'):
-            print('*'*100)
-            print(int(req.params['page']))
-            print('*'*100)
             messages = page(self.session, int(req.params['page']))
+            cur_page = int(req.params['page'])
         else:
             messages = page(self.session, 1)
         out_list = list()
@@ -72,7 +67,7 @@ class Messages:
         for message in messages:
             tmp_dict = message_to_dict(message)
             out_list.append(tmp_dict)
-        resp
+
         resp.body = json.dumps(out_list, indent=2)
         resp.set_header('X-Pages', pages(self.session))
         resp.set_header('X-Page', cur_page)
