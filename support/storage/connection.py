@@ -42,6 +42,8 @@ class Partnership(Base):
     send_dir = Column(String(250), nullable=False, unique=True)
     last_check = Column(DateTime)
 
+    messages = relationship("Message", backref="partner")
+
     def update_timestamp(self):
         self.last_check = datetime.datetime.now()
 
@@ -75,18 +77,21 @@ class Acknowledge(Base):
     partner_id = Column(Integer, nullable=False)
     ack_content = Column(PickleType, nullable=True)
     status = Column(Enum(Status), nullable=True)
-    interchange_id = Column(Integer, nullable=False)
-
+    interchange_id = Column(Integer, ForeignKey('interchange_container.id'), nullable=False)
 
 # Container for building files later
 class InterchangeContainer(Base):
 
-    __tablename__ = "interchange container"
+    __tablename__ = "interchange_container"
 
     id = Column(Integer, primary_key=True)
-    partner_id = Column(Integer, nullable=False)
+    partner_id = Column(Integer, ForeignKey('partnership.id') ,nullable=False)
     content = Column(PickleType, nullable=False)
     control_number = Column(Integer, nullable=False)
+
+    groups = relationship("GroupContainer", backref="interchange")
+    messages = relationship("Message", backref="interchange")
+    acknowledgement = relationship("Acknowledge", uselist=False)
 
     def get_iea(self):
         return [
@@ -97,13 +102,15 @@ class InterchangeContainer(Base):
 
 class GroupContainer(Base):
 
-    __tablename__ = "group container"
+    __tablename__ = "group_container"
 
     id = Column(Integer, primary_key=True)
-    partner_id = Column(Integer, nullable=False)
-    interchange_id = Column(Integer, nullable=False)
+    partner_id = Column(Integer, ForeignKey('partnership.id') ,nullable=False)
+    interchange_id = Column(Integer, ForeignKey('interchange_container.id'),nullable=False)
     content = Column(PickleType, nullable=False)
     control_number = Column(Integer, nullable=False)
+
+    messages = relationship("Message", backref="group")
 
     def get_ge(self):
         return [
@@ -117,9 +124,9 @@ class Message(Base):
     __tablename__ = "message"
 
     id = Column(Integer, primary_key=True)
-    partner_id = Column(Integer, nullable=False)
-    interchange_id = Column(Integer, nullable=False)
-    group_id = Column(Integer)
+    partner_id = Column(Integer, ForeignKey('partnership.id'), nullable=False)
+    interchange_id = Column(Integer, ForeignKey('interchange_container.id'),nullable=False)
+    group_id = Column(Integer, ForeignKey('group_container.id'))
     template_type = Column(Integer, nullable=False)
     control_number = Column(Integer, nullable=False)
     content = Column(PickleType, nullable=False)

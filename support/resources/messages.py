@@ -28,7 +28,7 @@ def message_to_dict(message: connection.Message, session, individual=False):
     message_dict['template id'] = message.template_type
     message_dict['interchange control number'] = message.get_interchange_container(session).control_number
     if message.group_id:
-        message_dict['group control number'] = message.get_group_container(session).control_number
+        message_dict['group control number'] = message.group.control_number
     message_dict['transaction control number'] = message.control_number
     message_dict['date'] = unix_time
     message_dict['status'] = message.status.value
