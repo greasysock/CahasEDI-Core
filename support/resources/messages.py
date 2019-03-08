@@ -44,11 +44,11 @@ def message_to_dict(message: connection.Message, individual=False):
     return message_dict
 
 # Pulls back correct page
-def page(session, page:int, page_length=2):
+def page(session, page:int, page_length=20):
     start_index = (page - 1)*page_length
     return session.query(connection.Message).order_by(connection.Message.date.desc()).limit(page_length).offset(start_index)
 
-def pages(session, page_length=2):
+def pages(session, page_length=20):
     return math.ceil(float(session.query(connection.Message).count())/float(page_length))
 
 class Messages:
