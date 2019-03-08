@@ -200,7 +200,6 @@ if __name__ == '__main__':
     Session = sessionmaker(bind=db)
     session = Session()
     partners = session.query(Partnership).all()
-    session.close()
     while True:
         for partner in partners:
             partner_loop(partner)

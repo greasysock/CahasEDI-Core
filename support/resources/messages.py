@@ -20,13 +20,13 @@ def numbered_dict_to_list(tar:dict):
 
     return out_list
 
-def message_to_dict(message: connection.Message, session, individual=False):
+def message_to_dict(message: connection.Message, individual=False):
     unix_time = time.mktime(message.date.timetuple())
     message_dict = dict()
     message_dict['message id'] = message.id
     message_dict['partner id'] = message.partner_id
     message_dict['template id'] = message.template_type
-    message_dict['interchange control number'] = message.get_interchange_container(session).control_number
+    message_dict['interchange control number'] = message.interchange.control_number
     if message.group_id:
         message_dict['group control number'] = message.group.control_number
     message_dict['transaction control number'] = message.control_number
@@ -45,7 +45,7 @@ class Messages:
         out_list = list()
 
         for message in messages:
-            tmp_dict = message_to_dict(message, self.session)
+            tmp_dict = message_to_dict(message)
             out_list.append(tmp_dict)
 
         resp.body = json.dumps(out_list, indent=2)
@@ -126,7 +126,7 @@ class Message:
 
     def on_get(self, req, resp, message_id):
         message = self.session.query(connection.Message).filter_by(id=message_id).first()
-        out_dict = message_to_dict(message, self.session, individual=True)
+        out_dict = message_to_dict(message, individual=True)
 
         resp.body = json.dumps(out_dict, indent=2)
 
