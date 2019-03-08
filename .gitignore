@@ -1,0 +1,7 @@
+/testing/*
+/documentation/*
+/support/edi/bin/*
+/config.json
+/start.sh
+*__pycache__
+/.idea/*
