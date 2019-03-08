@@ -20,6 +20,22 @@ def numbered_dict_to_list(tar:dict):
 
     return out_list
 
+def message_to_dict(message: connection.Message, session, individual=False):
+    unix_time = time.mktime(message.date.timetuple())
+    message_dict = dict()
+    message_dict['message id'] = message.id
+    message_dict['partner id'] = message.partner_id
+    message_dict['template id'] = message.template_type
+    message_dict['interchange control number'] = message.get_interchange_container(session).control_number
+    if message.group_id:
+        message_dict['group control number'] = message.get_group_container(session).control_number
+    message_dict['transaction control number'] = message.control_number
+    message_dict['date'] = unix_time
+    message_dict['status'] = message.status.value
+    if individual:
+        template = message.get_template()
+        message_dict['content'] = template.get_detailed_content()
+    return message_dict
 
 class Messages:
 
@@ -29,17 +45,7 @@ class Messages:
         out_list = list()
 
         for message in messages:
-            unix_time = time.mktime(message.date.timetuple())
-            tmp_dict = dict()
-            tmp_dict['message id'] = message.id
-            tmp_dict['partner id'] = message.partner_id
-            tmp_dict['template id'] = message.template_type
-            tmp_dict['interchange control number'] = message.get_interchange_container(self.session).control_number
-            if message.group_id:
-                tmp_dict['group control number'] = message.get_group_container(self.session).control_number
-            tmp_dict['transaction control number'] = message.control_number
-            tmp_dict['date'] = unix_time
-            tmp_dict['status'] = message.status.value
+            tmp_dict = message_to_dict(message, self.session)
             out_list.append(tmp_dict)
 
         resp.body = json.dumps(out_list, indent=2)
@@ -120,23 +126,7 @@ class Message:
 
     def on_get(self, req, resp, message_id):
         message = self.session.query(connection.Message).filter_by(id=message_id).first()
-        interchange_container = message.get_interchange_container(self.session)
-        if message.group_id:
-            group_container = message.get_group_container(self.session)
-        template = message.get_template()
-
-        unix_time = time.mktime(message.date.timetuple())
-        out_dict = dict()
-        out_dict['message id'] = message.id
-        out_dict['partner id'] = message.partner_id
-        out_dict['template id'] = message.template_type
-        out_dict['interchange control number'] = interchange_container.control_number
-        if message.group_id:
-            out_dict['group control number'] = group_container.control_number
-        out_dict['transaction control number'] = message.control_number
-        out_dict['date'] = unix_time
-        out_dict['status'] = message.status.value
-        out_dict['content'] = template.get_detailed_content()
+        out_dict = message_to_dict(message, self.session, individual=True)
 
         resp.body = json.dumps(out_dict, indent=2)
 
