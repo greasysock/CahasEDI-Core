@@ -91,7 +91,7 @@ class InterchangeContainer(Base):
 
     groups = relationship("GroupContainer", backref="interchange")
     messages = relationship("Message", backref="interchange")
-    acknowledgement = relationship("Acknowledge", uselist=False)
+    acknowledge = relationship("Acknowledge", uselist=False)
 
     def get_iea(self):
         return [

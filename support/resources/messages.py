@@ -29,6 +29,10 @@ def message_to_dict(message: connection.Message, individual=False):
     message_dict['interchange control number'] = message.interchange.control_number
     if message.group_id:
         message_dict['group control number'] = message.group.control_number
+    if message.interchange.acknowledge:
+        message_dict['acknowledge status'] = message.interchange.acknowledge.status.value
+    else:
+        message_dict['acknowledge status'] = connection.Status.acknowledged_na.value
     message_dict['transaction control number'] = message.control_number
     message_dict['date'] = unix_time
     message_dict['status'] = message.status.value
