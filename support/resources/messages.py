@@ -43,6 +43,7 @@ def message_to_dict(message: connection.Message, individual=False):
         message_dict['content'] = template.get_detailed_content()
     return message_dict
 
+
 # Pulls back correct page
 def page(session, page:int, page_length=20):
     start_index = (page - 1)*page_length
@@ -51,25 +52,24 @@ def page(session, page:int, page_length=20):
 def pages(session, page_length=20):
     return math.ceil(float(session.query(connection.Message).count())/float(page_length))
 
-class Messages:
 
+class Messages:
+    page_length = 20
     # Get method returns all message descriptions
     def on_get(self, req, resp):
         cur_page = 1
         # Check if page param was given, otherwise return first page.
         if req.params.get('page'):
-            messages = page(self.session, int(req.params['page']))
             cur_page = int(req.params['page'])
-        else:
-            messages = page(self.session, 1)
-        out_list = list()
+        messages = page(self.session, cur_page, page_length=self.page_length)
 
+        out_list = list()
         for message in messages:
             tmp_dict = message_to_dict(message)
             out_list.append(tmp_dict)
 
         resp.body = json.dumps(out_list, indent=2)
-        resp.set_header('X-Pages', pages(self.session))
+        resp.set_header('X-Pages', pages(self.session, page_length=self.page_length))
         resp.set_header('X-Page', cur_page)
 
     # Submit EDI file
