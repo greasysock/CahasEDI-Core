@@ -130,6 +130,8 @@ class Message(Base):
     template_type = Column(Integer, nullable=False)
     control_number = Column(Integer, nullable=False)
     content = Column(PickleType, nullable=False)
+    content_id = Column(Integer)
+    content_parent_id = Column(Intege)
     date = Column(DateTime, nullable=False)
     status = Column(Enum(Status), nullable=False)
 
