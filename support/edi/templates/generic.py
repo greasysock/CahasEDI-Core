@@ -257,6 +257,16 @@ class Template:
     def put_detailed_structure(self, detailed_structure):
         pass
 
+    # Unique id for content type, including purchase order number/invoice number
+    @property
+    def content_id(self):
+        return None
+
+    # Unique id for content parent, including order number for a purchase order change etc.
+    @property
+    def content_parent_id(self):
+        return None
+
     @property
     def control_num(self):
         return self._control_num
