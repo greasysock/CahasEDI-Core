@@ -20,6 +20,8 @@ class Template:
         self.ISA = None
         self._control_num = None
         self._partnership_data = None
+        self._content_id = None
+        self._content_parent_id = None
         self.group_info = group_identifiers.Invoice()
         if group_info:
             self.group_info = group_info()
@@ -260,12 +262,12 @@ class Template:
     # Unique id for content type, including purchase order number/invoice number
     @property
     def content_id(self):
-        return None
+        return self._content_id
 
     # Unique id for content parent, including order number for a purchase order change etc.
     @property
     def content_parent_id(self):
-        return None
+        return self._content_parent_id
 
     @property
     def control_num(self):
