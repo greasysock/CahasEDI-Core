@@ -21,7 +21,7 @@ class Template:
         self._control_num = None
         self._partnership_data = None
         self._content_id = None
-        self._content_parent_id = None
+        self._content_parent_ids = None
         self.group_info = group_identifiers.Invoice()
         if group_info:
             self.group_info = group_info()
@@ -69,6 +69,8 @@ class Template:
                 if tmp_list.__len__() > 1:
                     tmp_list = [tmp_list,]
                 out_list = out_list+tmp_list
+            else:
+                out_list.append(None)
         self._data = out_list
 
     def _prepare_tag(self, tag, cursor, min, max, status):
@@ -266,8 +268,8 @@ class Template:
 
     # Unique id for content parent, including order number for a purchase order change etc.
     @property
-    def content_parent_id(self):
-        return self._content_parent_id
+    def content_parent_ids(self):
+        return self._content_parent_ids
 
     @property
     def control_num(self):

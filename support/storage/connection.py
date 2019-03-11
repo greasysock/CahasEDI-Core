@@ -131,7 +131,7 @@ class Message(Base):
     control_number = Column(Integer, nullable=False)
     content = Column(PickleType, nullable=False)
     content_id = Column(Integer)
-    content_parent_id = Column(Intege)
+    content_parents = relationship("ContentParent", backref="message")
     date = Column(DateTime, nullable=False)
     status = Column(Enum(Status), nullable=False)
 
@@ -157,6 +157,14 @@ class Message(Base):
 
         edi_array = [interchange.content] + [group.content] + self.content + [group.get_ge()] + [interchange.get_iea()]
         return stream_handle.EdiHeader(edi_array)
+
+
+class ContentParent(Base):
+    __tablename__ = "content_parent"
+    id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, nullable=False)
+    partner_id = Column(Integer, nullable=False)
+    message_id = Column(Integer, ForeignKey('message.id'), nullable=False)
 
 
 # Checks partnerships in conf file against database, updates database when needed.
