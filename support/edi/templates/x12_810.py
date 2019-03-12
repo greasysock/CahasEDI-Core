@@ -42,9 +42,16 @@ class Template(generic.Template):
 
         generic.Template.__init__( self, i, desc, start_data=start_data, structure=structure, group_info=group_identifiers.Invoice)
 
+    # We need to find the invoice id and assign that to content id and the purchase order id and assign them to parent ids
     def _init_process(self):
         super()._init_process()
-        
+
+        # Invoice ID
+        self._content_id = self._mapped_data[0][2].decode()
+
+        # Purchase Order Number
+        self._content_parent_ids.append(self._mapped_data[0][4].decode())
+
 
 class TemplateDescription(generic.TemplateDescription):
     def __init__(self):

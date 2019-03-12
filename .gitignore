@@ -5,3 +5,5 @@
 /start.sh
 *__pycache__
 /.idea/*
+/edi_testing.py
+/testoutput.edi

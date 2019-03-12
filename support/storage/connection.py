@@ -130,7 +130,7 @@ class Message(Base):
     template_type = Column(Integer, nullable=False)
     control_number = Column(Integer, nullable=False)
     content = Column(PickleType, nullable=False)
-    content_id = Column(Integer)
+    content_id = Column(String(50))
     content_parents = relationship("ContentParent", backref="message")
     date = Column(DateTime, nullable=False)
     status = Column(Enum(Status), nullable=False)
@@ -162,7 +162,7 @@ class Message(Base):
 class ContentParent(Base):
     __tablename__ = "content_parent"
     id = Column(Integer, primary_key=True)
-    parent_id = Column(Integer, nullable=False)
+    parent_id = Column(String(50), nullable=False)
     partner_id = Column(Integer, nullable=False)
     message_id = Column(Integer, ForeignKey('message.id'), nullable=False)
 

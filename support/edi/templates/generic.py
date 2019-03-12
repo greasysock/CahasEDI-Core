@@ -21,7 +21,7 @@ class Template:
         self._control_num = None
         self._partnership_data = None
         self._content_id = None
-        self._content_parent_ids = None
+        self._content_parent_ids = list()
         self.group_info = group_identifiers.Invoice()
         if group_info:
             self.group_info = group_info()
@@ -63,14 +63,17 @@ class Template:
     def _init_process_inner_data(self):
         cursor = 1
         out_list = list()
+        out_order = list()
         for structure in self._structure:
             cursor, tmp_list = self._unpack_data(structure, cursor)
             if tmp_list:
                 if tmp_list.__len__() > 1:
                     tmp_list = [tmp_list,]
                 out_list = out_list+tmp_list
+                out_order = out_order+tmp_list
             else:
-                out_list.append(None)
+                out_order.append(None)
+        self._mapped_data = out_order
         self._data = out_list
 
     def _prepare_tag(self, tag, cursor, min, max, status):
@@ -212,7 +215,6 @@ class Template:
                         if type(tmp_out[0]) != list:
                             tmp_out = [tmp_out]
                         out_list += tmp_out
-                    print(section)
             if content == self._data:
                 out_list = [self.ST.get_bytes_list()] + out_list + [self.SE.get_bytes_list()]
             return out_list
