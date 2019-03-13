@@ -3,7 +3,7 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from support import config
 import falcon
-from support.resources import messages, partners, templates
+from support.resources import messages, partners, templates, invoices
 from support.storage import connection
 
 conf = config.File("config.json")
@@ -55,6 +55,10 @@ app = falcon.API(middleware=[
 
 local_messages = messages.Messages()
 local_message = messages.Message()
+
+local_invoices = invoices.Invoices()
+local_invoice = invoices.Invoice()
+
 local_partners = partners.Partners()
 local_partner = partners.Partner()
 local_partner_upload = partners.PartnerUpload()
@@ -68,5 +72,6 @@ app.add_route('/partners/{partner_id}', local_partner)
 app.add_route('/partners/{partner_id}/upload', local_partner_upload)
 app.add_route('/templates', local_templates)
 app.add_route('/templates/{template_id}', local_template)
-
+app.add_route('/invoices', local_invoices)
+app.add_route('/invoices/{invoice_id}', local_invoice)
 

@@ -128,6 +128,7 @@ def receive_message_as_bytes(content: bytes, partner: Partnership):
     processed_list = list()
     for section in content.split(line_separator):
         processed_list.append(section.split(delimiter))
+    print(processed_list)
     receive_message(stream_handle.EdiHeader(init_data=processed_list), partner)
 
 @huey.task()
