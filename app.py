@@ -65,7 +65,7 @@ app.add_route('/messages', local_messages)
 app.add_route('/messages/{message_id}', local_message)
 app.add_route('/partners', local_partners)
 app.add_route('/partners/{partner_id}', local_partner)
-app.add_route('/partners/{partner_id}/upload', local_partner)
+app.add_route('/partners/{partner_id}/upload', local_partner_upload)
 app.add_route('/templates', local_templates)
 app.add_route('/templates/{template_id}', local_template)
 

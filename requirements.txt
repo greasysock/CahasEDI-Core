@@ -1,4 +1,6 @@
-sqlalchemy
-falcon
-psycopg2-binary
-gunicorn
+sqlalchemy>=1.2.17
+falcon>=1.4.1
+psycopg2-binary>=2.7.7
+gunicorn>=19.9.0
+redis>=3.2.0
+huey>=1.11.0
