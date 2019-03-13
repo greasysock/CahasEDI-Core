@@ -1,7 +1,7 @@
 import support.config as config
 from support.edi import stream_handle
 import support.storage.connection as connection
-from support.storage.connection import Partnership, Message, Status, Acknowledge, InterchangeContainer, GroupContainer
+from support.storage.connection import Partnership, Message, Status, Acknowledge, InterchangeContainer, GroupContainer, ContentParent
 from sqlalchemy.orm import sessionmaker
 import os, datetime, io
 from support.edi.templates import generic, x12_997
@@ -95,11 +95,23 @@ def create_group_container(group: stream_handle.EdiGroup, partner: Partnership):
     
     return group_container
 
-def get_content_ids(content: generic.Template):
+def create_content_parent(parent_id: str, partner: Partnership):
+    content_parent = ContentParent()
+    content_parent.partner_id = partner.id
+    content_parent.parent_id = parent_id
+    return content_parent
+
+def get_content_ids(content: generic.Template, partner: Partnership):
+    return content.content_id, [create_content_parent(parent,partner) for parent in content.content_parent_ids]
 
 def create_message(content: generic.Template, partner: Partnership, interchange: InterchangeContainer):
     tmp_message = Message()
 
+    content_id, parent_ids = get_content_ids(content, partner)
+    if content_id:
+        tmp_message.content_id = content_id
+    if parent_ids:
+        tmp_message.content_parents += parent_ids
     tmp_message.date = datetime.datetime.now()
     tmp_message.content = content.get_bytes_list()
     tmp_message.partner_id = partner.id
