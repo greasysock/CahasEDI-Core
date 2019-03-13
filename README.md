@@ -27,5 +27,7 @@ CahasEDI-Core is in very early stages of development and is not ready/intended f
     * Psycopg2
     * Falcon
     * gunicorn
+    * redis
+    * huey
 * Postgresql
 * OpenAS2 Configured for each partnership

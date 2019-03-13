@@ -1,6 +1,8 @@
 from ..storage.connection import Partnership
 import json
 from .. import config
+from support.task_conf import huey
+from tasks import receive_message_as_bytes
 
 def partner_to_dict(partner: Partnership):
     partner_dict = dict()
@@ -40,12 +42,4 @@ class PartnerUpload:
     def on_put(self, req, resp, partner_id):
         partner = self.session.query(Partnership).filter_by(id=partner_id).first()
         if req.content_type == 'application/octet-stream' and partner:
-            partner_upload
-            content = req.stream.read()
-            delimiter = content[3:4]
-            line_separator = content.split(delimiter)[16][1:2]
-            
-            processed_list = list()
-            for section in content.split(line_separator):
-                processed_list.append(section.split(delimiter))
-            print(processed_list)
+            receive_message_as_bytes( req.stream.read(), partner)

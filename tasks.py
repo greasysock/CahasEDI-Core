@@ -3,7 +3,7 @@ from support.edi import stream_handle
 import support.storage.connection as connection
 from support.storage.connection import Partnership, Message, Status, Acknowledge, InterchangeContainer, GroupContainer, ContentParent
 from sqlalchemy.orm import sessionmaker
-import os, datetime, io
+import os, datetime, io, time
 from support.edi.templates import generic, x12_997
 from huey import crontab
 from support.task_conf import huey
@@ -29,7 +29,7 @@ def check_watch_dir(watch_dir: str, time):
                 bytesfile.writelines(raw.readlines())
             bytesfile.seek(0)
             edi_file = stream_handle.EdiFile(bytesfile)
-            out_edis.append(edi_file)
+            out_edis.append(edi_file.edi_header)
     return out_edis
 
 def update_timestamp(partner:Partnership):
@@ -72,7 +72,7 @@ def prepare_ack(ackno: generic.Template, partner: Partnership):
 
 def create_acknowledge(message: stream_handle.EdiFile, partner: Partnership):
     ack_message = Acknowledge()
-    ack_message.ack_content = prepare_ack(message.edi_header.ack, partner)
+    ack_message.ack_content = prepare_ack(message.ack, partner)
     ack_message.partner_id = partner.id
     ack_message.status = Status.send
     return ack_message
@@ -122,32 +122,41 @@ def create_message(content: generic.Template, partner: Partnership, interchange:
     return tmp_message
 
 @huey.task()
+def receive_message_as_bytes(content: bytes, partner: Partnership):
+    delimiter = content[3:4]
+    line_separator = content.split(delimiter)[16][1:2]
+    processed_list = list()
+    for section in content.split(line_separator):
+        processed_list.append(section.split(delimiter))
+    receive_message(stream_handle.EdiHeader(init_data=processed_list), partner)
+
+@huey.task()
 def receive_message(message: stream_handle.EdiHeader, partner: Partnership):
 
     # Make interchange container
-    interchange = create_interchange_container(message.edi_header, partner)
+    interchange = create_interchange_container(message, partner)
 
     # Check if only one set was received
     if message == []:
-        for content in message.edi_header.get_all_content():
+        for content in message.get_all_content():
             msg = create_message(content, partner, interchange)
             interchange.messages.append(msg)
         return
 
     # Generate ACK if requested
-    if message.edi_header.ack:
+    if message.ack:
         ack = create_acknowledge(message, partner)
         interchange.acknowledge = ack
 
     # Make group container
-    for group in message.edi_header: # type: stream_handle.EdiGroup
+    for group in message: # type: stream_handle.EdiGroup
         group_container = create_group_container(group, partner)
         for content in group: # type: generic.Template
             if content.template_type == x12_997.description.identifier_code:
                 pass
             else:
-                message = create_message(content, partner, interchange)
-                group_container.messages.append(message)
+                content_message = create_message(content, partner, interchange)
+                group_container.messages.append(content_message)
         interchange.groups.append(group_container)
     session = Session()
     session.add(interchange)
