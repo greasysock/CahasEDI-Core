@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 import os, datetime, io
 from support.edi.templates import generic, x12_997
 from huey import crontab
-from config import huey
+from support.task_conf import huey
 
 config_file = "config.json"
 
