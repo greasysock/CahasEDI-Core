@@ -9,12 +9,14 @@ def page(session, page:int, page_length=20):
 def pages(session, page_length=20):
     return math.ceil(float(session.query(connection.Message).count())/float(page_length))
 
-def message_to_dict(message: connection.Message, individual=False):
+def invoice_to_dict(message: connection.Message, individual=False):
     unix_time = time.mktime(message.date.timetuple())
     message_dict = dict()
     message_dict['message id'] = message.id
     message_dict['partner id'] = message.partner_id
     message_dict['template id'] = message.template_type
+    message_dict['invoice id'] = message.content_id
+    message_dict['related documents'] = [ {'document id' : doc.parent_id} for doc in message.content_parents ]
     message_dict['interchange control number'] = message.interchange.control_number
     if message.group_id:
         message_dict['group control number'] = message.group.control_number
@@ -44,7 +46,7 @@ class Invoices:
 
         out_list = list()
         for message in messages:
-            tmp_dict = message_to_dict(message)
+            tmp_dict = invoice_to_dict(message)
             out_list.append(tmp_dict)
 
         resp.body = json.dumps(out_list, indent=2)
