@@ -51,6 +51,82 @@ class Template(generic.Template):
 
         # Purchase Order Number
         self._content_parent_ids.append(self._mapped_data[0][4].decode())
+    
+    # Get invoice information, line items, totals, addresses etc.
+    def get_custom_detailed_content(self):
+        def get_item_date(item):
+            out = dict()
+            out['date'] = item[2].decode()
+            out['type'] = item[1].decode()
+            return out
+        def get_address(item):
+            def get_street(item):
+                return item[1].decode()
+            def get_geographic(item):
+                out = dict()
+                out['city'] = item[1].decode()
+                out['state']  = item[2].decode()
+                out['zip code'] = item[3].decode()
+                out['country'] = item[4].decode()
+                return out
+            out = dict()
+            out['type'] = item[0][1].decode()
+            out['name'] = item[0][2].decode()
+            out['street address'] = list()
+            if item.__len__() >= 2 and type(item[1]) == _N3:
+                out['street address'].append(get_street(item[1]))
+            elif item.__len__() >= 2 and type(item[1]) == _N4:
+                geo = get_geographic(item[1])
+                out.update(geo)
+            if item.__len__() >= 3 and type(item[2]) == _N4:
+                geo = get_geographic(item[2])
+                out.update(geo)
+            return out
+        def get_terms(item):
+            out = {
+                'type' : None,
+                'discount' : list(),
+                'net days' : None,
+                'description' : None
+            }
+            if item[1]:
+                out['type'] = item[1].decode()
+            if item[3]:
+                out['discount'] = dict()
+                out['discount']['percent'] = item[3].decode()
+                out['discount']['days due'] = items[5].decode()
+            if item[7]:
+                out['net days'] = item[7].decode()
+            if item[12]:
+                out['description'] = item[12].decode()
+            return out
+        out_dict = dict()
+
+        out_dict['date'] = self._mapped_data[0][1].decode()
+        out_dict['purchase order date'] = self._mapped_data[0][1].decode()
+
+        # Creating addresses
+        out_dict['addresses'] = list()
+        if type(self._mapped_data[2][0]) ==  list:
+            for address_details in self._mapped_data[2]:
+                out_dict['addresses'].append(get_address(address_details))
+        else:
+            out_dict['addresses'].append(get_address(self._mapped_data[2]))
+        
+        # Creating terms
+        out_dict['terms'] = list()
+        if type(self._mapped_data[3]) == list:
+            pass
+        elif type(self._mapped_data[3]) == _ITD:
+            out_dict['terms'].append(get_terms(self._mapped_data[3]))
+
+        # Handling DTM section
+        out_dict['item dates'] = list()
+        if type(self._mapped_data[4]) == list:
+            pass
+        else:
+            out_dict['item dates'].append(get_item_date(self._mapped_data[4]))
+        return out_dict
 
 
 class TemplateDescription(generic.TemplateDescription):

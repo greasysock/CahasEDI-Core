@@ -173,7 +173,10 @@ class Template:
                         tmp_list.append(self.get_detailed_content(input_content=inner_cont))
                     out_list.append(tmp_list)
             return out_list
-        return False
+        return False\
+    
+    def get_custom_detailed_content(self):
+        return None
 
     def get_detailed_content_old(self, input_content=None):
         if input_content:

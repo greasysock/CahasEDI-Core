@@ -32,6 +32,7 @@ def invoice_to_dict(message: connection.Message, individual=False):
     if individual:
         template = message.get_template()
         message_dict['content'] = template.get_detailed_content()
+        message_dict['invoice'] = template.get_custom_detailed_content()
     return message_dict
 
 class Invoices:
@@ -57,4 +58,6 @@ class Invoices:
         pass
 
 class Invoice:
-    pass
+    def on_get(self, req, resp, invoice_id):
+        invoice = self.session.query(connection.Message).filter_by(id=invoice_id).first()
+        resp.body = json.dumps(invoice_to_dict(invoice, individual=True))
