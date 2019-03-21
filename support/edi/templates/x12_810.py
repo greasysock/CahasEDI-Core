@@ -94,11 +94,14 @@ class Template(generic.Template):
             if item[3]:
                 out['discount'] = dict()
                 out['discount']['percent'] = item[3].decode()
-                out['discount']['days due'] = items[5].decode()
+                out['discount']['days due'] = item[5].decode()
             if item[7]:
                 out['net days'] = item[7].decode()
             if item[12]:
                 out['description'] = item[12].decode()
+            return out
+        def get_line_item(item):
+            out = dict()
             return out
         out_dict = dict()
 
@@ -126,6 +129,14 @@ class Template(generic.Template):
             pass
         else:
             out_dict['item dates'].append(get_item_date(self._mapped_data[4]))
+        
+        # Getting line items
+        out_dict['line items'] = list()
+        if self._mapped_data[6] and type(self._mapped_data[6][0]) == list:
+            for line_item in self._mapped_data[6]:
+                out_dict['line items'].append(get_line_item(line_item))
+        elif self._mapped_data[6] and type(self._mapped_data[6][0]) == _IT1:
+            out_dict['line items'].append(get_line_item(self._mapped_data[6]))
         return out_dict
 
 
