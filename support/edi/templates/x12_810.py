@@ -102,6 +102,27 @@ class Template(generic.Template):
             return out
         def get_line_item(item):
             out = dict()
+            def get_baseline(baseline):
+                base = dict()
+                if baseline[1]:
+                    pass
+                if baseline[2]:
+                    base['quantity'] = baseline[2].decode()
+                if baseline[3]:
+                    base['unit'] = baseline[3].decode()
+                if baseline[4]:
+                    base['price'] = baseline[4].decode()
+                
+                return base
+            b = get_baseline(item[0])
+            out.update(b)
+
+            # Get line item descriptions
+            out['description'] = list()
+            if (item.__len__() >= 2) and (type(item[1]) == list) and (type(item[1][0]) == _PID):
+                for description in item[1]:
+                    out['description'].append(description[5].decode())
+
             return out
         out_dict = dict()
 
@@ -137,6 +158,9 @@ class Template(generic.Template):
                 out_dict['line items'].append(get_line_item(line_item))
         elif self._mapped_data[6] and type(self._mapped_data[6][0]) == _IT1:
             out_dict['line items'].append(get_line_item(self._mapped_data[6]))
+
+        # Total monetary value
+        out_dict['total amount'] = self._mapped_data[7][1].decode()
         return out_dict
 
 
