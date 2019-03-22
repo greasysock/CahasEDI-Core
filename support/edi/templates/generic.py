@@ -1,4 +1,4 @@
-import io
+import io, time, datetime
 from .tags import _ST, _SE, _ISA, _GS, GENERIC_TAG, EmptyProperty, GenericProperty
 from .template_operators import template_list, discover_all_sections, clean_head
 from .. import group_identifiers
@@ -283,6 +283,9 @@ class Template:
     @property
     def template_type(self):
         return self._template_id
+
+    def time_to_unix(self, fmt_time):
+        return int(time.mktime(datetime.datetime.strptime(fmt_time, "%Y%m%d").timetuple()))
 
     def __str__(self):
         return "| {} Template - \"{}\" |".format(self._template_id, self._template_description)

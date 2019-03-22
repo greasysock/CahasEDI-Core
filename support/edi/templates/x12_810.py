@@ -94,9 +94,9 @@ class Template(generic.Template):
             if item[3]:
                 out['discount'] = dict()
                 out['discount']['percent'] = item[3].decode()
-                out['discount']['days due'] = item[5].decode()
+                out['discount']['days due'] = int(item[5].decode())
             if item[7]:
-                out['net days'] = item[7].decode()
+                out['net days'] = int(item[7].decode())
             if item[12]:
                 out['description'] = item[12].decode()
             return out
@@ -107,11 +107,11 @@ class Template(generic.Template):
                 if baseline[1]:
                     pass
                 if baseline[2]:
-                    base['quantity'] = baseline[2].decode()
+                    base['quantity'] = float(baseline[2].decode())
                 if baseline[3]:
                     base['unit'] = baseline[3].decode()
                 if baseline[4]:
-                    base['price'] = baseline[4].decode()
+                    base['price'] = float(baseline[4].decode())
                 
                 return base
             b = get_baseline(item[0])
@@ -126,8 +126,8 @@ class Template(generic.Template):
             return out
         out_dict = dict()
 
-        out_dict['date'] = self._mapped_data[0][1].decode()
-        out_dict['purchase order date'] = self._mapped_data[0][1].decode()
+        out_dict['date'] = self.time_to_unix(self._mapped_data[0][1].decode())
+        out_dict['purchase order date'] = self.time_to_unix(self._mapped_data[0][1].decode())
 
         # Creating addresses
         out_dict['addresses'] = list()
@@ -160,7 +160,7 @@ class Template(generic.Template):
             out_dict['line items'].append(get_line_item(self._mapped_data[6]))
 
         # Total monetary value
-        out_dict['total amount'] = self._mapped_data[7][1].decode()
+        out_dict['total amount'] = float(self._mapped_data[7][1].decode())
         return out_dict
 
 
