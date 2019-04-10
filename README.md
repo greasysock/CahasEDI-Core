@@ -2,6 +2,10 @@
 
 Server/Client to AS2 messaging server for managing EDI partnerships and interpreting messages
 
+## Frontend
+
+[CahasEDI-Dashboard](https://github.com/greasysock/CahasEDI-Dashboard) is being developed alongside CahasEDI-Core to be the official frontend for the project.
+
 #### Disclaimer
 
 CahasEDI-Core is in very early stages of development and is not ready/intended for use at the moment.
